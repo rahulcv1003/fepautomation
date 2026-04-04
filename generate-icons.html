@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FEP Icon Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+      min-height: 100vh;
+    }
+    h1 { font-size: 22px; color: #1a2e40; margin-bottom: 6px; }
+    p  { font-size: 14px; color: #667; margin-bottom: 36px; }
+    .row {
+      display: flex;
+      gap: 40px;
+      align-items: flex-end;
+      margin-bottom: 48px;
+    }
+    .cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    canvas {
+      border-radius: 18%;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    }
+    .label {
+      font-size: 12px;
+      color: #888;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+    button {
+      background: #16a085;
+      color: #fff;
+      border: none;
+      padding: 14px 36px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(22,160,133,0.4);
+      transition: transform .1s, box-shadow .1s;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,160,133,0.5); }
+    button:active { transform: none; }
+    .note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <h1>FEP Master Autofill Suite</h1>
+  <p>Extension icon previews — click to download all PNG files</p>
+  <div class="row" id="preview"></div>
+  <button onclick="downloadAll()">⬇&nbsp; Download All PNGs (16 · 32 · 48 · 128)</button>
+  <p class="note">
+    Save the downloaded files inside your extension folder as:<br>
+    <code>icons/icon16.png &nbsp;·&nbsp; icons/icon32.png &nbsp;·&nbsp; icons/icon48.png &nbsp;·&nbsp; icons/icon128.png</code>
+  </p>
+
+  <script>
+    /* ─── Draw the icon onto a canvas ────────────────────────────────────── */
+    function draw(canvas, size) {
+      canvas.width  = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const s   = size / 128; // universal scale factor
+
+      /* ── Background: teal gradient rounded rect ────────────────────────── */
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, "#1dd1a1");
+      grad.addColorStop(1, "#16a085");
+      ctx.fillStyle = grad;
+      const r = 22 * s;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, r);
+      ctx.fill();
+
+      /* ── Sun glow (48 px and above) ────────────────────────────────────── */
+      if (size >= 48) {
+        const sx = 64 * s, sy = 34 * s, sr = 13 * s;
+
+        // Rays
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle   = "#ffffff";
+        for (let i = 0; i < 8; i++) {
+          ctx.save();
+          ctx.translate(sx, sy);
+          ctx.rotate(i * Math.PI / 4);
+          ctx.fillRect(-2 * s, sr + 3 * s, 4 * s, 9 * s);
+          ctx.restore();
+        }
+        ctx.restore();
+
+        // Glow circle
+        const glowGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 2);
+        glowGrad.addColorStop(0,   "rgba(255,255,200,0.55)");
+        glowGrad.addColorStop(0.5, "rgba(255,255,180,0.18)");
+        glowGrad.addColorStop(1,   "rgba(255,255,180,0)");
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core sun dot
+        ctx.fillStyle   = "rgba(255,255,255,0.55)";
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      /* ── Lightning bolt ────────────────────────────────────────────────── */
+      // Coordinates designed on a 128×128 grid
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor  = "rgba(0,0,0,0.15)";
+      ctx.shadowBlur   = 4 * s;
+      ctx.shadowOffsetY = 2 * s;
+      ctx.beginPath();
+      ctx.moveTo(71 * s,  15 * s);   // top-right of upper arm
+      ctx.lineTo(37 * s,  70 * s);   // lower-left of upper arm
+      ctx.lineTo(61 * s,  70 * s);   // inner notch — left
+      ctx.lineTo(53 * s, 113 * s);   // tip of bolt (bottom)
+      ctx.lineTo(89 * s,  58 * s);   // upper-right of lower arm
+      ctx.lineTo(65 * s,  58 * s);   // inner notch — right
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowColor = "transparent";
+    }
+
+    /* ─── Build previews ──────────────────────────────────────────────────── */
+    const SIZES    = [16, 32, 48, 128];
+    const canvases = {};
+
+    SIZES.forEach(sz => {
+      const c    = document.createElement("canvas");
+      canvases[sz] = c;
+      draw(c, sz);
+
+      const cell  = document.createElement("div");
+      cell.className = "cell";
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = `${sz} × ${sz}`;
+      cell.appendChild(c);
+      cell.appendChild(label);
+      document.getElementById("preview").appendChild(cell);
+    });
+
+    /* ─── Download all ─────────────────────────────────────────────────────── */
+    function downloadAll() {
+      SIZES.forEach(sz => {
+        const link      = document.createElement("a");
+        link.download   = `icon${sz}.png`;
+        link.href       = canvases[sz].toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
