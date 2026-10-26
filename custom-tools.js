@@ -81,6 +81,20 @@
     element.dispatchEvent(new Event("blur", { bubbles: true }));
   }
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  function valueMatches(element, expected) {
+    if (element.value === String(expected)) return true;
+    // Ant InputNumber uses type=text, but normalizes values such as 0123 to 123.
+    // Keep exact comparison for ordinary text fields (phone numbers, IDs, etc.).
+    if (!element.matches('input[type="number"], input[role="spinbutton"], input.ant-input-number-input')) return false;
+    const number = value => {
+      const text = String(value).trim();
+      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text)) return null;
+      const parsed = Number(text);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+    const wanted = number(expected), actual = number(element.value);
+    return wanted !== null && actual !== null && wanted === actual;
+  }
   async function fill(rule) {
     const element = resolve(rule);
     const type = rule.locator.type;
@@ -128,8 +142,17 @@
       if (element.checked !== desired) element.click();
       if (element.checked !== desired) throw new Error("Selection was not confirmed.");
     } else {
+      element.focus();
       setValue(element, rule.value);
-      if (element.value !== rule.value) throw new Error("Value was rejected. Check the field type and format.");
+      element.blur();
+      // Allow controlled fields to normalize or replace the input after React renders.
+      let current;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await wait(60);
+        if (!matches(rule)) throw new Error("Page changed while filling.");
+        current = resolve(rule);
+      }
+      if (!valueMatches(current, rule.value)) throw new Error(`Value was not accepted. Requested “${rule.value}”; field shows “${current.value}”. Check the field's allowed range and format.`);
     }
     await wait(100);
   }
