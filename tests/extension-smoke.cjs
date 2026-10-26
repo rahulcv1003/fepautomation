@@ -18,8 +18,8 @@ const vm=require('node:vm');
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.1.1'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.1.1'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.1.2'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.1.2'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
@@ -30,7 +30,20 @@ const vm=require('node:vm');
     await page.locator('#fep-launcher').focus();
     await page.keyboard.press('Enter');
     assert.equal(await page.locator('#fep-launcher').getAttribute('aria-expanded'),'true');
+    const compact=await page.locator('#fep-popup').boundingBox();
+    assert(compact.width<=265 && compact.height<=355,'Default panel should be compact');
+    assert.equal(await page.locator('#fep-launcher').innerText(),'','Launcher should use an icon without a wordmark');
     await page.locator('#fep-popup').screenshot({path:path.join(root,'test-results/launcher-panel.png')});
+    await page.locator('#fep-launcher').screenshot({path:path.join(root,'test-results/launcher-icon.png')});
+    const grip=page.getByRole('button',{name:'Resize tools panel',exact:true});
+    await grip.focus();await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowDown');
+    const larger=await page.locator('#fep-popup').boundingBox();
+    assert(larger.width>compact.width && larger.height>compact.height,'Panel resizes with keyboard');
+    const corner=await grip.boundingBox();
+    await page.mouse.move(corner.x+8,corner.y+7);await page.mouse.down();
+    await page.mouse.move(corner.x-12,corner.y-13,{steps:4});await page.mouse.up();
+    const dragged=await page.locator('#fep-popup').boundingBox();
+    assert(dragged.width>larger.width && dragged.height>larger.height,'Panel resizes by dragging its corner');
     await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.locator('#fep-popup').screenshot({path:path.join(root,'test-results/settings-panel.png')});
     assert.equal(await page.getByText('Mascot',{exact:true}).count(),0);
@@ -51,6 +64,8 @@ const vm=require('node:vm');
     assert.equal(saved['fep-custom-fields-v1'][0].value,'Persistent extension value');
     await page.getByRole('button',{name:'Close',exact:true}).click();await page.reload();await inject();
     await page.locator('#fep-launcher').click();
+    const restored=await page.locator('#fep-popup').boundingBox();
+    assert(Math.abs(restored.width-dragged.width)<2 && Math.abs(restored.height-dragged.height)<2,'Panel size persists after page reload');
     await page.getByRole('button',{name:'Custom Field Builder',exact:true}).click();
     await page.getByRole('button',{name:'Fill saved fields',exact:true}).click();
     await page.getByRole('heading',{name:'Custom autofill results'}).waitFor();

@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.1.1 applies saved custom values at each field’s turn in the existing autofill workflow, before dependent fields. It retains the graphite FEP launcher and redesigned tools introduced in 1.1.0.
+Version 1.1.2 uses a compact icon-only launcher and a smaller, resizable tool panel. Drag the panel’s upper-left corner to resize it; use arrow keys when the resize handle has focus, or double-click it to reset. Your preferred size is saved in extension local storage. Saved field values still apply at their turn before dependent fields.
 
 ## Supported URLs
 

@@ -70,7 +70,7 @@ So the toolkit works like this:
 
 ## 4. The floating launcher (main UI)
 
-Version 1.1.0 replaces the mascot picker and comic controls with a compact graphite FEP wordmark launcher. It remains draggable (6px threshold), and opens with click, Enter, or Space. Escape dismisses the panel. Positioning clamps the tool panel to the viewport.
+Version 1.1.2 uses a 40×40 icon-only graphite launcher and a compact 264×354 tool panel. The upper-left corner handle resizes the panel with pointer input or arrow keys; double-click resets the default. The preferred size is persisted in extension local storage. It remains draggable (6px threshold), and opens with click, Enter, or Space. Escape dismisses the panel. Positioning clamps the tool panel to the viewport.
 
 The panel groups Fill Lead, Auto Fill Details, and Non Finance under Autofill; Custom Field Builder, Feedback & feature requests, and Settings appear under Workspace. Unavailable autofill actions remain disabled. The environment badge identifies the current host environment. Settings retains the profile name and saved-time statistics.
 

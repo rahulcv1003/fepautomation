@@ -99,11 +99,11 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.1.1",
+    version: "1.1.2",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [{
-      title: "Saved values, in sequence.",
-      items: ["Saved values now replace defaults at each field’s turn, before dependent fields are filled.", "New custom fields enter the workflow in page order. If a saved value fails, autofill stops with a clear message."],
+      title: "A smaller footprint.",
+      items: ["A compact icon launcher and a smaller tool panel leave more room for your work.", "Drag the upper-left corner to resize the panel. Your preferred size is remembered."],
       final: true
     }]
   };
@@ -2292,7 +2292,7 @@
     launcher.setAttribute("aria-label", "Open FEP tools");
     launcher.setAttribute("aria-expanded", "false");
     launcher.setAttribute("aria-controls", "fep-popup");
-    launcher.innerHTML = '<span class="fep-launcher-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 19V5h14M5 12h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/></svg></span><span class="fep-launcher-label">FEP<span>TOOLS</span></span><span class="fep-launcher-chevron" aria-hidden="true">⌃</span>';
+    launcher.innerHTML = '<span class="fep-launcher-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M14 17.5h7m-3.5-3.5v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>';
 
     // Subtle completion indicator on the launcher once a full autofill run (Fill Lead /
     // Auto Fill Details / Non Finance) finishes — one indicator for the whole
@@ -2386,7 +2386,7 @@
     const panelHeader = document.createElement("header");
     panelHeader.className = "fep-panel-header";
     const panelTitle = document.createElement("div");
-    panelTitle.textContent = "FEP tools";
+    panelTitle.textContent = "Tools";
     const panelSubtitle = document.createElement("p");
     panelSubtitle.textContent = "Autofill, rules, and feedback.";
     panelTitle.appendChild(panelSubtitle);
@@ -2590,6 +2590,58 @@
       return null;
     }
 
+    const panelSizeKey = "fep-tools-panel-size";
+    let preferredSize = { width: 264, height: 354 };
+    let sizeChanged = false;
+    function applyPanelSize() {
+      popup.style.setProperty("--fep-panel-width", Math.min(preferredSize.width, Math.max(180, window.innerWidth - 24)) + "px");
+      popup.style.setProperty("--fep-panel-height", Math.min(preferredSize.height, Math.max(180, window.innerHeight - 32)) + "px");
+    }
+    function savePanelSize() {
+      chrome.storage.local.set({ [panelSizeKey]: preferredSize }).catch(error => console.warn(LOG_PREFIX, "Panel size could not be saved", error));
+    }
+    chrome.storage.local.get(panelSizeKey).then(result => {
+      const saved = result[panelSizeKey];
+      if (!sizeChanged && saved && Number.isFinite(saved.width) && Number.isFinite(saved.height)) {
+        preferredSize = { width: Math.max(230, Math.min(480, saved.width)), height: Math.max(230, Math.min(720, saved.height)) };
+        applyPanelSize();
+        if (popup.style.display !== "none") positionPopup();
+      }
+    }).catch(error => console.warn(LOG_PREFIX, "Panel size could not be loaded", error));
+    const resizeGrip = document.createElement("button");
+    resizeGrip.type = "button";
+    resizeGrip.className = "fep-resize-grip";
+    resizeGrip.textContent = "↖";
+    resizeGrip.setAttribute("aria-label", "Resize tools panel");
+    resizeGrip.title = "Drag this corner to resize. Arrow keys resize; double-click resets.";
+    popup.prepend(resizeGrip);
+    resizeGrip.addEventListener("pointerdown", event => {
+      if (event.button !== 0) return;
+      event.preventDefault(); event.stopPropagation();
+      const start = { x: event.clientX, y: event.clientY, width: popup.offsetWidth, height: popup.offsetHeight };
+      resizeGrip.setPointerCapture(event.pointerId);
+      const move = next => {
+        preferredSize = { width: Math.max(230, Math.min(480, start.width + start.x - next.clientX)), height: Math.max(230, Math.min(720, start.height + start.y - next.clientY)) };
+        sizeChanged = true; applyPanelSize(); positionPopup();
+      };
+      const stop = () => { resizeGrip.removeEventListener("pointermove", move); resizeGrip.removeEventListener("pointerup", stop); resizeGrip.removeEventListener("pointercancel", stop); savePanelSize(); };
+      resizeGrip.addEventListener("pointermove", move);
+      resizeGrip.addEventListener("pointerup", stop);
+      resizeGrip.addEventListener("pointercancel", stop);
+    });
+    resizeGrip.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault(); event.stopPropagation();
+      if (event.key === "ArrowLeft") preferredSize.width -= 16;
+      if (event.key === "ArrowRight") preferredSize.width += 16;
+      if (event.key === "ArrowUp") preferredSize.height -= 16;
+      if (event.key === "ArrowDown") preferredSize.height += 16;
+      preferredSize.width = Math.max(230, Math.min(480, preferredSize.width));
+      preferredSize.height = Math.max(230, Math.min(720, preferredSize.height));
+      sizeChanged = true; applyPanelSize(); positionPopup(); savePanelSize();
+    });
+    resizeGrip.addEventListener("dblclick", event => { event.stopPropagation(); preferredSize = {width:264,height:354}; sizeChanged = true; applyPanelSize(); positionPopup(); savePanelSize(); });
+
     // ── Popup open / close ───────────────────────────────────────────────────
     function positionPopup() {
       const r = launcher.getBoundingClientRect();
@@ -2628,6 +2680,7 @@
 
       nonFinanceBtn.style.display = location.href.includes("generate-po") ? "block" : "none";
       showMainView();
+      applyPanelSize();
       popup.style.display = "flex";
       launcher.setAttribute("aria-expanded", "true");
       positionPopup();
@@ -2676,7 +2729,7 @@
       }
     });
 
-    window.addEventListener("resize", () => { if (popup.style.display !== "none") positionPopup(); });
+    window.addEventListener("resize", () => { applyPanelSize(); if (popup.style.display !== "none") positionPopup(); });
 
     // ── Drag logic ───────────────────────────────────────────────────────────
     let dragging = false;
