@@ -100,12 +100,12 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.0.4",
+    version: "1.0.5",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [
       {
         title: "Make FEP your own",
-        items: ["Pick fields and save your own autofill values with Custom Field Builder.", "Report a bug from the launcher and review it on GitHub before submitting."]
+        items: ["Pick fields and save your own autofill values with Custom Field Builder.", "Feedback & feature requests from the launcher and review it on GitHub before submitting."]
       },
       {
         title: "Hey, it's been a while 👋",
@@ -2507,7 +2507,7 @@
     });
     const reportBugBtn = document.createElement("button");
     reportBugBtn.type = "button";
-    reportBugBtn.textContent = "Report a bug";
+    reportBugBtn.textContent = "Feedback & feature requests";
     reportBugBtn.className = "fep-comic-btn";
     reportBugBtn.style.cssText = base + ";background:#fff7ed;color:#9a3412;";
     reportBugBtn.addEventListener("click", () => {

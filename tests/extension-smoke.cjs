@@ -1,16 +1,25 @@
 const { chromium }=require('playwright');
 const path=require('node:path');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
 (async()=>{
   const root=path.resolve(__dirname,'..');
+  const source=fs.readFileSync(path.join(root,'content.js'),'utf8');
+  const tracked=source.slice(source.indexOf('  async function runTrackedAutofill('),source.indexOf('  function normalize('));
+  const order=[];
+  const sandbox={performance,fieldTouchCount:0,recordAutofillRun:()=>order.push('record'),FepCustomTools:{fillSaved:async()=>order.push('rules')}};
+  vm.createContext(sandbox);vm.runInContext(tracked,sandbox);
+  await sandbox.runTrackedAutofill('lead',async()=>order.push('built-in'));
+  assert.deepEqual(order,['built-in','rules','record'],'Saved rules must override built-in autofill values');
   const browser=await chromium.launch({headless:true});
   const context=await browser.newContext();
   try{
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.4'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.0.4'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.5'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.0.5'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
@@ -35,8 +44,8 @@ const assert=require('node:assert/strict');
     assert.equal(await page.locator('input[name=contact]').inputValue(),'Persistent extension value');
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await page.locator('#fep-launcher').click();
-    await page.getByRole('button',{name:'Report a bug',exact:true}).click();
-    await page.getByRole('heading',{name:'Report a bug',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Feedback & feature requests',exact:true}).click();
+    await page.getByRole('heading',{name:'Feedback & feature requests',exact:true}).waitFor();
     console.log('PASS: full content-script launcher integration, storage API integration, custom fill after reload, bug-report entry.');
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

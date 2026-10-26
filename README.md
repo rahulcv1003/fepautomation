@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.0.4 adds configurable fields and GitHub bug reporting to the existing FEP automation tools.
+Version 1.0.5 adds configurable fields and GitHub bug reporting to the existing FEP automation tools.
 
 ## Supported URLs
 
@@ -57,9 +57,9 @@ Version 1.0.4 adds configurable fields and GitHub bug reporting to the existing 
 
 Supported: text, number, email, textarea, native dates, native single-select dropdowns, Ant Design single-select dropdowns, checkboxes, and radio options. Multi-selects, file uploads, password fields, and read-only date widgets are not supported. Numeric, MongoDB, and UUID path segments default to `*` so rules can apply to different project IDs. Query parameters are ignored; review the path when two forms share a route. Duplicate matches use the selected occurrence and expected match count; recheck rules after page layout changes. Forms are never submitted automatically.
 
-## Report a bug
+## Feedback & feature requests
 
-Choose **Report a bug** from the launcher. Enter the summary, feature, steps, expected result, and actual result. **Review report on GitHub** opens the structured issue form in [rahulcv1003/fepautomation](https://github.com/rahulcv1003/fepautomation/issues/new?template=bug_report.yml). Review it and click **Submit new issue** there. A GitHub account is required. Reports are public; omit customer and payment details. Only extension version, hostname, and browser family are added automatically; page URLs, project IDs, field values, and request payloads are not collected. Repository notification settings control delivery to its owner.
+Choose **Feedback & feature requests** from the launcher. Enter the summary, feature, steps, expected result, and actual result. **Review report on GitHub** opens the structured issue form in [rahulcv1003/fepautomation](https://github.com/rahulcv1003/fepautomation/issues/new?template=bug_report.yml). Review it and click **Submit new issue** there. A GitHub account is required. Reports are public; omit customer and payment details. Only extension version, hostname, and browser family are added automatically; page URLs, project IDs, field values, and request payloads are not collected. Repository notification settings control delivery to its owner.
 
 ## Development checks
 

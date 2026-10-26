@@ -218,6 +218,7 @@
     else {
       const currentValue = element?.matches("select") ? element.selectedOptions[0]?.textContent : element?.matches(".ant-select") ? element.querySelector(".ant-select-selection-item")?.textContent : element?.value;
       value = input(locator.type === "dropdown" ? "Exact option text" : "Value to fill", body, existing?.value ?? clean(currentValue), element?.matches("textarea") ? "textarea" : "input");
+      if (locator.type === "dropdown") el("p", "Enter the exact field value as displayed in the dropdown, including spelling and capitalization. For example: Residential. The rule will not pick a different option if it cannot find that value.", body).className = "muted";
       if (locator.type === "date") value.type = "date";
     }
     const host = select("Environment", body, [[location.hostname, `This host: ${location.hostname}`],["*","All supported environments"]], existing?.host || location.hostname);
@@ -272,7 +273,7 @@
   }
   async function manager() {
     const items=await rules();
-    const body=modal("Custom Field Builder","Pick a field, save your value, and reuse it on matching pages. Rules stay in this browser. Avoid saving passwords or other secrets.");
+    const body=modal("Custom Field Builder","Pick a field, save your value, and reuse it on matching pages. Saved rules override the built-in values each time you use Autofill on a matching page and environment. Rules stay in this browser. Avoid saving passwords or other secrets.");
     const actions=el("div",undefined,body);actions.className="actions";
     button("Pick a field on this page",actions,pick);
     button("Fill saved fields",actions,()=>fillSaved(),true);
@@ -297,19 +298,20 @@
   }
 
   function report() {
-    const body=modal("Report a bug","Send a report to Rahul through GitHub. You’ll review it on GitHub and click Submit new issue. A GitHub account is required; reports are public. Don’t include customer details, tokens, or payment information.");
+    const body=modal("Feedback & feature requests","Share a bug, feature suggestion, or general feedback with Rahul through GitHub. You’ll review it on GitHub and click Submit new issue. A GitHub account is required; reports are public. Don’t include customer details, tokens, or payment information.");
+    const category=select("Feedback type",body,[["Bug","Bug report"],["Feature","Feature suggestion"],["Feedback","General feedback"]],"Bug");
     const title=input("Short summary",body);title.maxLength=160;
     const area=select("Affected feature",body,[["Autofill","Autofill"],["Custom fields","Custom Field Builder"],["Payments","Pay Advance Payment"],["Documents","Documents"],["Survey / installation","Survey / installation"],["Other","Other"]],"Autofill");
-    const steps=input("Steps to reproduce",body,"","textarea");steps.maxLength=2500;
-    const expected=input("What did you expect?",body,"","textarea");expected.maxLength=1500;
-    const actual=input("What happened instead?",body,"","textarea");actual.maxLength=2500;
+    const steps=input("Steps to reproduce / proposed workflow",body,"","textarea");steps.maxLength=2500;
+    const expected=input("Expected result / desired improvement",body,"","textarea");expected.maxLength=1500;
+    const actual=input("Current behavior / problem to solve",body,"","textarea");actual.maxLength=2500;
     el("p",`Included context: extension ${chrome.runtime.getManifest().version}, ${location.hostname}, browser family. No page URLs, project IDs, field values, or request payloads are collected.`,body).className="muted";
     button("Review report on GitHub",body,()=>{
       if(!title.value.trim() || !steps.value.trim() || !expected.value.trim() || !actual.value.trim())throw new Error("Complete the summary, steps, expected result, and actual result.");
       const browser=/Edg\//.test(navigator.userAgent)?"Edge":/Chrome\//.test(navigator.userAgent)?"Chrome / Chromium":"Other";
-      const text=`### Feature\n${area.value}\n\n### Steps to reproduce\n${steps.value.trim()}\n\n### Expected result\n${expected.value.trim()}\n\n### Actual result\n${actual.value.trim()}\n\n### Environment\n- Extension: ${chrome.runtime.getManifest().version}\n- Host: ${location.hostname}\n- Browser: ${browser}`;
+      const text=`### Feedback type\n${category.value}\n\n### Feature\n${area.value}\n\n### Steps to reproduce / proposed workflow\n${steps.value.trim()}\n\n### Expected result\n${expected.value.trim()}\n\n### Actual result\n${actual.value.trim()}\n\n### Environment\n- Extension: ${chrome.runtime.getManifest().version}\n- Host: ${location.hostname}\n- Browser: ${browser}`;
       const url=new URL(`https://github.com/${REPO}/issues/new`);
-      url.searchParams.set("template","bug_report.yml");url.searchParams.set("title",`[Bug] ${title.value.trim()}`);url.searchParams.set("report",text);url.searchParams.set("browser",browser);
+      url.searchParams.set("template","bug_report.yml");url.searchParams.set("title",`[${category.value}] ${title.value.trim()}`);url.searchParams.set("report",text);url.searchParams.set("browser",browser);
       if (url.href.length > 8000) throw new Error("This report is too long to open on GitHub. Shorten it, then add more detail or attachments on GitHub.");
       window.open(url.href,"_blank","noopener,noreferrer");
       status("Review and submit the report in the GitHub tab. It has not been submitted by the extension.");

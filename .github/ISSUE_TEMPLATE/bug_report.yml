@@ -1,6 +1,6 @@
-name: Report a bug
-description: Report a problem with FEP Master Autofill Suite.
-title: "[Bug] "
+name: Feedback & feature requests
+description: Report a bug, suggest a feature, or share feedback about FEP Master Autofill Suite.
+title: "[Feedback] "
 assignees:
   - rahulcv1003
 body:
@@ -9,7 +9,7 @@ body:
       value: |
         Thanks for reporting a problem. Reports are public. Remove customer information,
         project IDs, credentials, and payment details before submitting. The extension's
-        Report a bug button can prefill this form; you can also write a report here directly.
+        Feedback & feature requests button can prefill this form; you can also write a report here directly.
   - type: textarea
     id: report
     attributes:
@@ -34,4 +34,3 @@ body:
         - Other
     validations:
       required: true
-

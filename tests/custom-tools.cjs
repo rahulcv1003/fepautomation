@@ -24,7 +24,7 @@ const fixture = `<!doctype html><html><body style="font-family:system-ui;padding
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:fixture}));
     await page.route('https://qa-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:fixture}));
     await page.addInitScript(() => {
-      globalThis.chrome={runtime:{getManifest:()=>({version:'1.0.4'})},storage:{local:{
+      globalThis.chrome={runtime:{getManifest:()=>({version:'1.0.5'})},storage:{local:{
         get:async key=>({[key]:JSON.parse(localStorage.getItem(key)||'[]')}),
         set:async data=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
@@ -89,14 +89,16 @@ const fixture = `<!doctype html><html><body style="font-family:system-ui;padding
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fep-custom-fields-v1')).some(item=>item.name==='Notes')),false);
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await page.evaluate(()=>FepCustomTools.report());
+    await page.getByLabel('Feedback type').selectOption('Feature');
     await page.getByLabel('Short summary').fill('Dropdown did not fill');
-    await page.getByLabel('Steps to reproduce').fill('Open form and click Autofill');
-    await page.getByLabel('What did you expect?').fill('Residential selected');
-    await page.getByLabel('What happened instead?').fill('Dropdown stayed empty');
+    await page.getByLabel('Steps to reproduce / proposed workflow').fill('Open form and click Autofill');
+    await page.getByLabel('Expected result / desired improvement').fill('Residential selected');
+    await page.getByLabel('Current behavior / problem to solve').fill('Dropdown stayed empty');
     await page.getByRole('button',{name:'Review report on GitHub'}).click();
     const report=new URL(await page.evaluate(()=>lastReport));
     assert.equal(report.pathname,'/rahulcv1003/fepautomation/issues/new');
     assert.equal(report.searchParams.get('template'),'bug_report.yml');
+    assert.equal(report.searchParams.get('title'),'[Feature] Dropdown did not fill');
     assert(report.searchParams.get('report').includes('Dropdown stayed empty'));
     assert(!report.href.includes('456'));assert(!report.href.includes('Custom Customer'));
     await page.screenshot({path:path.resolve(__dirname,'../test-results/bug-report.png')});
