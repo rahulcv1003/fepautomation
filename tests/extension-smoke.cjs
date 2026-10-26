@@ -18,16 +18,29 @@ const vm=require('node:vm');
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.7'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.0.7'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.1.0'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.1.0'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
     });
-    const inject=async()=>{await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'content.js')});};
-    await page.goto('https://uat-fep.freyrenergy.com/test-form');await inject();
+    const inject=async()=>{await page.addStyleTag({path:path.join(root,'ui.css')});await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'content.js')});};
+    await page.goto('https://uat-fep.freyrenergy.com/create-proposal/123');await inject();
     await page.locator('#fep-launcher').waitFor();
-    await page.locator('#fep-launcher').click();
+    await page.locator('#fep-launcher').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#fep-launcher').getAttribute('aria-expanded'),'true');
+    await page.locator('#fep-popup').screenshot({path:path.join(root,'test-results/launcher-panel.png')});
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
+    await page.locator('#fep-popup').screenshot({path:path.join(root,'test-results/settings-panel.png')});
+    assert.equal(await page.getByText('Mascot',{exact:true}).count(),0);
+    await page.getByRole('button',{name:'← Back',exact:true}).click();
+    await page.setViewportSize({width:375,height:700});
+    await page.keyboard.press('Escape');
+    await page.locator('#fep-launcher').focus();await page.keyboard.press('Enter');
+    const bounds=await page.locator('#fep-popup').boundingBox();
+    assert(bounds.x>=0 && bounds.x+bounds.width<=375,'Tool panel stays inside narrow viewport');
+    await page.setViewportSize({width:1280,height:900});
     await page.getByRole('button',{name:'Custom Field Builder',exact:true}).click();
     await page.getByRole('button',{name:'Pick a field on this page'}).click();
     await page.locator('input[name=contact]').click();

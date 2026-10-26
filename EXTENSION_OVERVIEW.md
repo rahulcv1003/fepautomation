@@ -70,17 +70,11 @@ So the toolkit works like this:
 
 ## 4. The floating launcher (main UI)
 
-A small floating button (`#fep-launcher`, a rounded 58×58 pill showing a cat or dog pixel-art icon) appears on every page the extension runs on. It's draggable — clicking without dragging opens a popup menu; dragging repositions it (a >6px movement threshold tells the two apart).
+Version 1.1.0 replaces the mascot picker and comic controls with a compact graphite FEP wordmark launcher. It remains draggable (6px threshold), and opens with click, Enter, or Space. Escape dismisses the panel. Positioning clamps the tool panel to the viewport.
 
-Clicking it opens a small popup with 3 options:
+The panel groups Fill Lead, Auto Fill Details, and Non Finance under Autofill; Custom Field Builder, Feedback & feature requests, and Settings appear under Workspace. Unavailable autofill actions remain disabled. The environment badge identifies the current host environment. Settings retains the profile name and saved-time statistics.
 
-1. **Fill Lead** — always available. Fills the "create lead" modal (see §5).
-2. **Auto Fill Details** — fills whatever form matches the *current URL* (see the page map in §5). Greyed out with a tooltip ("No autofill available for this page") if the current URL doesn't match any known form.
-3. **Switch to Dog / Switch to Cat** — cosmetic toggle between the two mascot icons, saved in `localStorage`.
-
-This popup is the **only** place the launcher exposes actions. The document-upload buttons and the "Pay Advance / Site Survey / Pre-Install / Post-Install" buttons (§7, §8) are separate, injected directly next to the relevant page element — they do not appear in this popup.
-
-The launcher and all page-specific buttons are (re-)injected by a single function `createButtons()`, which runs every time the page's DOM mutates (via a `MutationObserver` watching the whole `<body>`) plus once on a 1.5s fallback timer. This is how the extension keeps up with the FEP site being a single-page app that swaps content without a full page reload — there's no explicit "route changed" event; it just re-checks the current URL/DOM continuously.
+Styles in ui.css are scoped to extension-owned UI. Custom-field and feedback dialogs use an isolated shadow root with the same typography, graphite buttons, neutral surfaces, keyboard focus indicators, and responsive spacing. The mascot preference is no longer used; saved custom rules and profile/statistics data are preserved.
 
 ---
 

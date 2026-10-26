@@ -6,10 +6,10 @@
   // Shared style for all injected inline buttons — matches the site's design language
   function inlineBtn(extraCss) {
     return (
-      "padding:5px 13px;border:none;border-radius:8px;cursor:pointer;" +
-      "font-size:12px;font-weight:600;color:#fff;white-space:nowrap;" +
-      "box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:opacity .15s;" +
-      (extraCss || "")
+      "padding:8px 14px;border:1px solid #303236;border-radius:7px;cursor:pointer;" +
+      "font:500 12px/1.2 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#fff;background:#242528;white-space:nowrap;" +
+      "box-shadow:0 1px 2px #0000000a;transition:opacity .15s;" +
+      (extraCss || "").replace(/background:[^;]+;/g, "")
     );
   }
 
@@ -91,7 +91,6 @@
   const LEGACY_AUTOFILL_STATS_KEY = "fep-master-autofill-stats-v1";
   // Assumed manual-entry time saved per field/action the autofill bypasses.
   const MS_SAVED_PER_FIELD = 2000;
-  const MASCOT_KEY = "fep-master-launcher-mascot";
   const USER_NAME_KEY = "fep-master-user-name";
   const LAST_SEEN_VERSION_KEY = "fep-master-last-seen-version";
 
@@ -100,96 +99,15 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.0.7",
+    version: "1.1.0",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
-    pages: [
-      {
-        title: "Make FEP your own",
-        items: ["Pick fields and save your own autofill values with Custom Field Builder.", "Feedback & feature requests from the launcher and review it on GitHub before submitting."]
-      },
-      {
-        title: "Hey, it's been a while 👋",
-        items: ["Here's a quick look at what's new."]
-      },
-      {
-        title: "Built for speed",
-        items: [
-          "Faster than ever. Forms and documents fill in an instant.",
-          "Works across every FEP module, every environment. Yes, even localhost for the devs."
-        ]
-      },
-      {
-        title: "Fresh look, more control",
-        items: [
-          "A cleaner, clearer UI.",
-          "Pick your favorite mascot, or go standard FEP if you're recording a demo.",
-          "Add your name and every project gets created under it."
-        ]
-      },
-      {
-        title: "Know your impact",
-        items: ["See exactly how much time you've saved, right in Settings."]
-      },
-      {
-        title: "Not going anywhere",
-        items: ["This isn't abandoned. More updates are coming, especially if you tell me what's broken or what you want next."],
-        final: true
-      }
-    ]
+    pages: [{
+      title: "A new home for FEP tools.",
+      items: ["A focused new home for your FEP tools. Cleaner controls, quieter forms, and one unmistakable launcher.", "Your saved fields, feedback, and autofill actions are all right where you need them."],
+      final: true
+    }]
   };
-  const MASCOTS = {
-    fep: {
-      label: "FEP",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1d4ed8"/><text x="32" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="-1" fill="#ffffff" text-anchor="middle">FEP</text></svg>'
-    },
-    cat: {
-      label: "Cat",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="14" y="22" width="36" height="30" fill="#f59e0b"/><rect x="14" y="14" width="10" height="10" fill="#f59e0b"/><rect x="40" y="14" width="10" height="10" fill="#f59e0b"/><rect x="18" y="18" width="6" height="6" fill="#fed7aa"/><rect x="40" y="18" width="6" height="6" fill="#fed7aa"/><rect x="22" y="32" width="6" height="6" fill="#111827"/><rect x="36" y="32" width="6" height="6" fill="#111827"/><rect x="30" y="40" width="4" height="4" fill="#111827"/><rect x="26" y="46" width="4" height="2" fill="#111827"/><rect x="34" y="46" width="4" height="2" fill="#111827"/><rect x="10" y="34" width="8" height="2" fill="#92400e"/><rect x="46" y="34" width="8" height="2" fill="#92400e"/></svg>'
-    },
-    dog: {
-      label: "Dog",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="16" y="22" width="32" height="30" fill="#a16207"/><rect x="8" y="22" width="10" height="22" fill="#713f12"/><rect x="46" y="22" width="10" height="22" fill="#713f12"/><rect x="22" y="32" width="6" height="6" fill="#111827"/><rect x="36" y="32" width="6" height="6" fill="#111827"/><rect x="28" y="40" width="8" height="6" fill="#111827"/><rect x="24" y="48" width="16" height="4" fill="#fef3c7"/><rect x="28" y="48" width="8" height="2" fill="#ef4444"/><rect x="20" y="18" width="24" height="8" fill="#ca8a04"/></svg>'
-    },
-    fox: {
-      label: "Fox",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="14" y="12" width="10" height="12" fill="#ea580c"/><rect x="40" y="12" width="10" height="12" fill="#ea580c"/><rect x="17" y="15" width="4" height="6" fill="#1f2937"/><rect x="43" y="15" width="4" height="6" fill="#1f2937"/><rect x="14" y="24" width="36" height="28" fill="#ea580c"/><rect x="14" y="34" width="10" height="14" fill="#ffffff"/><rect x="40" y="34" width="10" height="14" fill="#ffffff"/><rect x="22" y="34" width="6" height="6" fill="#111827"/><rect x="36" y="34" width="6" height="6" fill="#111827"/><rect x="29" y="42" width="6" height="5" fill="#111827"/><rect x="26" y="48" width="4" height="2" fill="#111827"/><rect x="34" y="48" width="4" height="2" fill="#111827"/></svg>'
-    },
-    panda: {
-      label: "Panda",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="14" y="22" width="36" height="30" fill="#ffffff"/><rect x="14" y="14" width="10" height="10" fill="#111827"/><rect x="40" y="14" width="10" height="10" fill="#111827"/><rect x="18" y="30" width="12" height="10" fill="#111827"/><rect x="34" y="30" width="12" height="10" fill="#111827"/><rect x="22" y="33" width="4" height="4" fill="#ffffff"/><rect x="38" y="33" width="4" height="4" fill="#ffffff"/><rect x="29" y="42" width="6" height="4" fill="#111827"/><rect x="26" y="48" width="4" height="2" fill="#111827"/><rect x="34" y="48" width="4" height="2" fill="#111827"/></svg>'
-    },
-    owl: {
-      label: "Owl",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="18" y="12" width="6" height="8" fill="#92400e"/><rect x="40" y="12" width="6" height="8" fill="#92400e"/><rect x="16" y="20" width="32" height="32" fill="#92400e"/><rect x="18" y="28" width="14" height="14" fill="#fef3c7"/><rect x="32" y="28" width="14" height="14" fill="#fef3c7"/><rect x="23" y="33" width="6" height="6" fill="#111827"/><rect x="37" y="33" width="6" height="6" fill="#111827"/><rect x="29" y="44" width="6" height="6" fill="#f59e0b"/><rect x="22" y="50" width="20" height="4" fill="#fde68a"/></svg>'
-    },
-    rabbit: {
-      label: "Rabbit",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="18" y="6" width="8" height="20" fill="#f3f4f6"/><rect x="38" y="6" width="8" height="20" fill="#f3f4f6"/><rect x="20" y="9" width="4" height="14" fill="#fbcfe8"/><rect x="40" y="9" width="4" height="14" fill="#fbcfe8"/><rect x="16" y="26" width="32" height="26" fill="#f3f4f6"/><rect x="22" y="34" width="6" height="6" fill="#111827"/><rect x="36" y="34" width="6" height="6" fill="#111827"/><rect x="30" y="42" width="4" height="4" fill="#f9a8d4"/><rect x="26" y="48" width="4" height="2" fill="#111827"/><rect x="34" y="48" width="4" height="2" fill="#111827"/></svg>'
-    },
-    bear: {
-      label: "Bear",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="14" y="14" width="10" height="10" fill="#78350f"/><rect x="40" y="14" width="10" height="10" fill="#78350f"/><rect x="17" y="17" width="4" height="4" fill="#92400e"/><rect x="43" y="17" width="4" height="4" fill="#92400e"/><rect x="14" y="22" width="36" height="30" fill="#78350f"/><rect x="22" y="36" width="20" height="14" fill="#d6b88a"/><rect x="22" y="32" width="6" height="6" fill="#111827"/><rect x="36" y="32" width="6" height="6" fill="#111827"/><rect x="29" y="40" width="6" height="5" fill="#111827"/><rect x="26" y="48" width="4" height="2" fill="#111827"/><rect x="34" y="48" width="4" height="2" fill="#111827"/></svg>'
-    },
-    koala: {
-      label: "Koala",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="6" y="16" width="14" height="18" fill="#94a3b8"/><rect x="44" y="16" width="14" height="18" fill="#94a3b8"/><rect x="9" y="20" width="8" height="10" fill="#cbd5e1"/><rect x="47" y="20" width="8" height="10" fill="#cbd5e1"/><rect x="16" y="24" width="32" height="28" fill="#94a3b8"/><rect x="21" y="32" width="5" height="5" fill="#111827"/><rect x="38" y="32" width="5" height="5" fill="#111827"/><rect x="26" y="40" width="12" height="8" fill="#111827"/></svg>'
-    },
-    robot: {
-      label: "Robot",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="30" y="8" width="4" height="10" fill="#64748b"/><rect x="28" y="4" width="8" height="6" fill="#ef4444"/><rect x="16" y="20" width="32" height="28" fill="#cbd5e1"/><rect x="14" y="30" width="4" height="6" fill="#64748b"/><rect x="46" y="30" width="4" height="6" fill="#64748b"/><rect x="22" y="30" width="8" height="8" fill="#22d3ee"/><rect x="34" y="30" width="8" height="8" fill="#22d3ee"/><rect x="24" y="44" width="16" height="4" fill="#475569"/></svg>'
-    },
-    penguin: {
-      label: "Penguin",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="18" y="20" width="28" height="32" fill="#111827"/><rect x="22" y="22" width="20" height="12" fill="#ffffff"/><rect x="24" y="28" width="16" height="20" fill="#ffffff"/><rect x="25" y="26" width="4" height="4" fill="#111827"/><rect x="35" y="26" width="4" height="4" fill="#111827"/><rect x="28" y="32" width="8" height="6" fill="#f59e0b"/><rect x="22" y="50" width="6" height="4" fill="#f59e0b"/><rect x="36" y="50" width="6" height="4" fill="#f59e0b"/></svg>'
-    },
-    mouse: {
-      label: "Mouse",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges"><rect x="12" y="14" width="14" height="14" fill="#e5e7eb"/><rect x="38" y="14" width="14" height="14" fill="#e5e7eb"/><rect x="16" y="18" width="6" height="6" fill="#fbcfe8"/><rect x="42" y="18" width="6" height="6" fill="#fbcfe8"/><rect x="18" y="26" width="28" height="26" fill="#e5e7eb"/><rect x="24" y="34" width="5" height="5" fill="#111827"/><rect x="35" y="34" width="5" height="5" fill="#111827"/><rect x="30" y="42" width="4" height="4" fill="#f472b6"/><rect x="8" y="40" width="8" height="2" fill="#9ca3af"/><rect x="48" y="40" width="8" height="2" fill="#9ca3af"/></svg>'
-    }
-  };
-  const MASCOT_ORDER = Object.keys(MASCOTS);
 
-  let mascotCache = null;
   let statsCache = null;
   let userNameCache = null;
   let lastSeenVersionCache = null;
@@ -202,7 +120,7 @@
     }
   }
 
-  // Loads persisted mascot/stats state before the launcher first renders.
+  // Loads persisted profile/stats state before the launcher first renders.
   // Backed by chrome.storage.local (survives the site's own "clear site data"),
   // with a one-time migration from the old localStorage-only values and a
   // localStorage fallback if the storage API is ever unavailable.
@@ -237,7 +155,6 @@
   // (e.g. the extension was reloaded in chrome://extensions while this tab's
   // content script — now orphaned — is still running).
   function loadFromLocalStorageOnly() {
-    mascotCache = localStorage.getItem(MASCOT_KEY);
     userNameCache = localStorage.getItem(USER_NAME_KEY);
     lastSeenVersionCache = localStorage.getItem(LAST_SEEN_VERSION_KEY);
     try {
@@ -261,22 +178,17 @@
     }
 
     try {
-      chrome.storage.local.get([MASCOT_KEY, USER_NAME_KEY, LAST_SEEN_VERSION_KEY, AUTOFILL_STATS_KEY, LEGACY_AUTOFILL_STATS_KEY], (result) => {
+      chrome.storage.local.get([USER_NAME_KEY, LAST_SEEN_VERSION_KEY, AUTOFILL_STATS_KEY, LEGACY_AUTOFILL_STATS_KEY], (result) => {
         if (chrome.runtime && chrome.runtime.lastError) {
           loadFromLocalStorageOnly();
           done();
           return;
         }
 
-        mascotCache = result[MASCOT_KEY] || null;
         userNameCache = result[USER_NAME_KEY] || null;
         lastSeenVersionCache = result[LAST_SEEN_VERSION_KEY] || null;
         statsCache = result[AUTOFILL_STATS_KEY] || null;
 
-        if (mascotCache === null) {
-          const legacyMascot = localStorage.getItem(MASCOT_KEY);
-          if (legacyMascot) mascotCache = legacyMascot;
-        }
         if (userNameCache === null) {
           const legacyName = localStorage.getItem(USER_NAME_KEY);
           if (legacyName) userNameCache = legacyName;
@@ -298,10 +210,6 @@
       loadFromLocalStorageOnly();
       done();
     }
-  }
-
-  function getMascotType() {
-    return MASCOTS[mascotCache] ? mascotCache : "fep";
   }
 
   function getUserName() {
@@ -358,8 +266,8 @@
     let pageIndex = 0;
     const pages = CHANGELOG.pages;
 
-    const SERIF_FONT = "Georgia,'Iowan Old Style','Times New Roman',serif";
-    const TEAL = "#0f766e";
+    const SERIF_FONT = "-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+    const TEAL = "#202124";
 
     const overlay = document.createElement("div");
     overlay.id = "fep-whats-new";
@@ -428,7 +336,7 @@
       if (isFinal) {
         const rateBtn = document.createElement("button");
         rateBtn.type = "button";
-        rateBtn.textContent = "⭐ Rate on Chrome Web Store";
+        rateBtn.textContent = "Review on Chrome Web Store";
         rateBtn.style.cssText = [
           "width:100%",
           "padding:10px 14px",
@@ -488,16 +396,6 @@
   function maybeShowWhatsNew() {
     if (lastSeenVersionCache === CHANGELOG.version) return;
     showWhatsNewModal();
-  }
-
-  function persistMascot(type) {
-    mascotCache = type;
-    persistToStorage(MASCOT_KEY, type, type);
-  }
-
-  function mascotDataUrl(type) {
-    const mascot = MASCOTS[type] || MASCOTS.fep;
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(mascot.svg);
   }
 
   function isUatHost() {
@@ -2340,33 +2238,6 @@
   function createLauncher() {
     if (document.getElementById("fep-launcher")) return;
 
-    // ── Comic-bubble button style — injected once, applied via .fep-comic-btn ─
-    const comicStyle = document.createElement("style");
-    comicStyle.id = "fep-comic-style";
-    comicStyle.textContent = `
-      .fep-comic-btn {
-        font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive, sans-serif !important;
-        border: 3px solid #111827 !important;
-        border-radius: 20px 20px 20px 4px !important;
-        box-shadow: 3px 3px 0 #111827 !important;
-        transform: rotate(-0.7deg);
-        transition: transform .1s ease, box-shadow .1s ease !important;
-      }
-      .fep-comic-btn:hover:not(:disabled) {
-        transform: translate(-1px,-1px) rotate(0deg);
-        box-shadow: 4px 4px 0 #111827 !important;
-      }
-      .fep-comic-btn:active:not(:disabled) {
-        transform: translate(2px,2px) rotate(0deg);
-        box-shadow: 1px 1px 0 #111827 !important;
-      }
-      .fep-comic-btn:disabled {
-        transform: none;
-        box-shadow: 2px 2px 0 #9ca3af !important;
-      }
-    `;
-    document.head.appendChild(comicStyle);
-
     // ── Pill button ──────────────────────────────────────────────────────────
     const launcher = document.createElement("div");
     launcher.id = "fep-launcher";
@@ -2391,29 +2262,21 @@
       "transition:box-shadow .2s,transform .15s"
     ].join(";");
 
-    const mascotImg = document.createElement("img");
-    mascotImg.alt = "FEP Autofill";
-    mascotImg.draggable = false;
-    mascotImg.style.cssText = "width:44px;height:44px;image-rendering:pixelated;pointer-events:none;";
-    launcher.appendChild(mascotImg);
+    launcher.setAttribute("role", "button");
+    launcher.setAttribute("tabindex", "0");
+    launcher.setAttribute("aria-label", "Open FEP tools");
+    launcher.setAttribute("aria-expanded", "false");
+    launcher.setAttribute("aria-controls", "fep-popup");
+    launcher.innerHTML = '<span class="fep-launcher-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 19V5h14M5 12h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/></svg></span><span class="fep-launcher-label">FEP<span>TOOLS</span></span><span class="fep-launcher-chevron" aria-hidden="true">⌃</span>';
 
-    // Green glow around the mascot pill once a full autofill run (Fill Lead /
+    // Subtle completion indicator on the launcher once a full autofill run (Fill Lead /
     // Auto Fill Details / Non Finance) finishes — one indicator for the whole
     // run rather than one per field, shown on the launcher itself so it works
     // identically on every page regardless of which filler just ran.
-    function flashMascotDone() {
+    function flashLauncherDone() {
       if (!launcher.isConnected) return;
-      const prevTransition = launcher.style.transition;
-      const prevBoxShadow = launcher.style.boxShadow;
-
-      launcher.style.transition = "box-shadow .2s ease";
-      launcher.style.boxShadow =
-        "0 0 0 4px rgba(39,174,96,0.6), 0 6px 20px rgba(15,23,42,0.24), 0 1px 4px rgba(15,23,42,0.16)";
-
-      setTimeout(() => {
-        launcher.style.boxShadow = prevBoxShadow;
-        launcher.style.transition = prevTransition;
-      }, 1500);
+      launcher.dataset.state = "done";
+      setTimeout(() => { delete launcher.dataset.state; }, 1500);
     }
 
     // ── Popup card ───────────────────────────────────────────────────────────
@@ -2433,7 +2296,7 @@
       "min-width:194px",
       "width:194px",
       // Fixed footprint regardless of which view is showing — Settings (stats +
-      // a 12-icon mascot grid) is much taller than the main view, and letting
+      // profile and activity) is much taller than the main view, and letting
       // the popup balloon to fit it forced re-dragging the launcher each time.
       "max-height:400px",
       "overflow-y:auto",
@@ -2468,13 +2331,15 @@
     const leadBtn = document.createElement("button");
     leadBtn.type = "button";
     leadBtn.textContent = "Fill Lead";
-    leadBtn.className = "fep-comic-btn";
+    leadBtn.className = "fep-tool-button";
+    leadBtn.dataset.primary = "true";
     leadBtn.style.cssText = base + ";background:#00897b;color:#fff;";
 
     const detailsBtn = document.createElement("button");
     detailsBtn.type = "button";
     detailsBtn.textContent = "Auto Fill Details";
-    detailsBtn.className = "fep-comic-btn";
+    detailsBtn.className = "fep-tool-button";
+    detailsBtn.dataset.primary = "true";
     detailsBtn.style.cssText = base + ";background:#4f46e5;color:#fff;";
 
     // Only relevant on the PO page — sets "project under finance" to No and
@@ -2482,24 +2347,40 @@
     const nonFinanceBtn = document.createElement("button");
     nonFinanceBtn.type = "button";
     nonFinanceBtn.textContent = "Non Finance";
-    nonFinanceBtn.className = "fep-comic-btn";
+    nonFinanceBtn.className = "fep-tool-button";
     nonFinanceBtn.style.cssText = base + ";background:#0891b2;color:#fff;display:none;";
 
     const settingsBtn = document.createElement("button");
     settingsBtn.type = "button";
-    settingsBtn.textContent = "⚙ Settings";
-    settingsBtn.className = "fep-comic-btn";
+    settingsBtn.textContent = "Settings";
+    settingsBtn.className = "fep-tool-button";
     settingsBtn.style.cssText = base + ";background:#f8fafc;color:#334155;border:1px solid #e2e8f0;";
 
     const mainView = document.createElement("div");
     mainView.style.cssText = "display:flex;flex-direction:column;gap:6px;";
+    const panelHeader = document.createElement("header");
+    panelHeader.className = "fep-panel-header";
+    const panelTitle = document.createElement("div");
+    panelTitle.textContent = "FEP tools";
+    const panelSubtitle = document.createElement("p");
+    panelSubtitle.textContent = "Autofill, rules, and feedback.";
+    panelTitle.appendChild(panelSubtitle);
+    const environmentBadge = document.createElement("span");
+    environmentBadge.className = "fep-environment";
+    environmentBadge.textContent = (getApiEnvironment()?.name || "local").toUpperCase();
+    panelHeader.append(panelTitle, environmentBadge);
+    mainView.appendChild(panelHeader);
+    const autofillLabel = document.createElement("div");
+    autofillLabel.className = "fep-section-label";
+    autofillLabel.textContent = "AUTOFILL";
+    mainView.appendChild(autofillLabel);
     mainView.appendChild(leadBtn);
     mainView.appendChild(detailsBtn);
     mainView.appendChild(nonFinanceBtn);
     const customFieldsBtn = document.createElement("button");
     customFieldsBtn.type = "button";
     customFieldsBtn.textContent = "Custom Field Builder";
-    customFieldsBtn.className = "fep-comic-btn";
+    customFieldsBtn.className = "fep-tool-button";
     customFieldsBtn.style.cssText = base + ";background:#eef2ff;color:#3730a3;";
     customFieldsBtn.addEventListener("click", () => {
       closePopup();
@@ -2508,12 +2389,23 @@
     const reportBugBtn = document.createElement("button");
     reportBugBtn.type = "button";
     reportBugBtn.textContent = "Feedback & feature requests";
-    reportBugBtn.className = "fep-comic-btn";
+    reportBugBtn.className = "fep-tool-button";
     reportBugBtn.style.cssText = base + ";background:#fff7ed;color:#9a3412;";
     reportBugBtn.addEventListener("click", () => {
       closePopup();
       globalThis.FepCustomTools.report();
     });
+    const workspaceLabel = document.createElement("div");
+    workspaceLabel.className = "fep-section-label";
+    workspaceLabel.textContent = "WORKSPACE";
+    mainView.appendChild(workspaceLabel);
+    leadBtn.dataset.description = "Create a lead with your saved defaults";
+    detailsBtn.dataset.description = "Fill the form on this page";
+    nonFinanceBtn.dataset.description = "Create a PO without financing";
+    customFieldsBtn.dataset.description = "Your fields. Your values.";
+    reportBugBtn.dataset.description = "Help shape what comes next";
+    settingsBtn.dataset.description = "Your profile and activity";
+    [leadBtn, detailsBtn, nonFinanceBtn, customFieldsBtn, reportBugBtn, settingsBtn].forEach(button => button.setAttribute("aria-label", button.textContent));
     mainView.appendChild(customFieldsBtn);
     mainView.appendChild(reportBugBtn);
     mainView.appendChild(settingsBtn);
@@ -2521,12 +2413,13 @@
     // ── Settings view: Stats + Mascot (tucked behind one button to keep the
     // main popup to just the actions people use every run) ───────────────────
     const settingsView = document.createElement("div");
+    settingsView.className = "fep-settings-view";
     settingsView.style.cssText = "display:none;flex-direction:column;gap:6px;";
 
     const backBtn = document.createElement("button");
     backBtn.type = "button";
     backBtn.textContent = "← Back";
-    backBtn.className = "fep-comic-btn";
+    backBtn.className = "fep-tool-button";
     backBtn.style.cssText = base + ";background:#f8fafc;color:#334155;border:1px solid #e2e8f0;";
 
     const whatsNewLink = document.createElement("button");
@@ -2592,9 +2485,11 @@
     statsLabel.style.cssText = "font-size:11px;font-weight:700;color:#94a3b8;padding:4px 2px 0;text-transform:uppercase;letter-spacing:.04em;";
 
     const statsToday = document.createElement("div");
+    statsToday.className = "fep-stat-row";
     statsToday.style.cssText = "font-size:12px;font-weight:700;color:#334155;padding:2px 2px 0;";
 
     const statsLifetime = document.createElement("div");
+    statsLifetime.className = "fep-stat-row";
     statsLifetime.style.cssText = "font-size:12px;font-weight:700;color:#334155;padding:0 2px;";
 
     const statsBreakdown = document.createElement("div");
@@ -2609,60 +2504,6 @@
       statsBreakdown.textContent = `Lifetime — Lead: ${stats.lifetime.lead.clicks} · Details: ${stats.lifetime.details.clicks}`;
     }
 
-    // ── Mascot picker ────────────────────────────────────────────────────────
-    const mascotLabel = document.createElement("div");
-    mascotLabel.textContent = "Mascot";
-    mascotLabel.style.cssText = "font-size:11px;font-weight:700;color:#94a3b8;padding:6px 2px 0;text-transform:uppercase;letter-spacing:.04em;";
-
-    const mascotGrid = document.createElement("div");
-    mascotGrid.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:2px;";
-
-    const mascotButtons = {};
-
-    function applyMascot(type) {
-      const selected = MASCOTS[type] ? type : "fep";
-      persistMascot(selected);
-      mascotImg.src = mascotDataUrl(selected);
-      launcher.dataset.mascot = selected;
-
-      MASCOT_ORDER.forEach((key) => {
-        const swatch = mascotButtons[key];
-        if (!swatch) return;
-        swatch.style.border = key === selected ? "2px solid #4f46e5" : "2px solid transparent";
-      });
-    }
-
-    MASCOT_ORDER.forEach((key) => {
-      const mascot = MASCOTS[key];
-      const swatch = document.createElement("button");
-      swatch.type = "button";
-      swatch.title = mascot.label;
-      swatch.style.cssText = [
-        "width:100%",
-        "aspect-ratio:1",
-        "padding:2px",
-        "border-radius:8px",
-        "cursor:pointer",
-        "background:#f8fafc",
-        "box-sizing:border-box"
-      ].join(";");
-
-      const swatchImg = document.createElement("img");
-      swatchImg.src = mascotDataUrl(key);
-      swatchImg.alt = mascot.label;
-      swatchImg.draggable = false;
-      swatchImg.style.cssText = "width:100%;height:100%;image-rendering:pixelated;pointer-events:none;";
-      swatch.appendChild(swatchImg);
-
-      swatch.addEventListener("click", (e) => {
-        e.stopPropagation();
-        applyMascot(key);
-      });
-
-      mascotButtons[key] = swatch;
-      mascotGrid.appendChild(swatch);
-    });
-
     settingsView.appendChild(backBtn);
     settingsView.appendChild(nameLabel);
     settingsView.appendChild(nameInput);
@@ -2670,16 +2511,14 @@
     settingsView.appendChild(statsToday);
     settingsView.appendChild(statsLifetime);
     settingsView.appendChild(statsBreakdown);
-    settingsView.appendChild(mascotLabel);
-    settingsView.appendChild(mascotGrid);
     settingsView.appendChild(whatsNewLink);
 
-    popup.appendChild(bubbleTail);
+    popup.setAttribute("role", "dialog");
+    popup.setAttribute("aria-label", "FEP tools");
     popup.appendChild(mainView);
     popup.appendChild(settingsView);
     document.body.appendChild(popup);
     document.body.appendChild(launcher);
-    applyMascot(getMascotType());
 
     function showMainView() {
       mainView.style.display = "flex";
@@ -2738,13 +2577,13 @@
         bubbleTail.style.bottom = "-7px";
         bubbleTail.style.top = "auto";
       } else {
-        popup.style.top    = (r.bottom + 8) + "px";
+        popup.style.top    = Math.max(12, Math.min(r.bottom + 8, window.innerHeight - popupH - 12)) + "px";
         popup.style.bottom = "auto";
         bubbleTail.style.top = "-7px";
         bubbleTail.style.bottom = "auto";
       }
-      popup.style.right = (window.innerWidth - r.right) + "px";
-      popup.style.left  = "auto";
+      popup.style.left = Math.max(12, Math.min(r.right - popup.offsetWidth, window.innerWidth - popup.offsetWidth - 12)) + "px";
+      popup.style.right = "auto";
     }
 
     function openPopup() {
@@ -2754,6 +2593,7 @@
       detailsBtn.style.cursor    = fn ? "pointer" : "not-allowed";
       detailsBtn.title           = fn ? "" : "No autofill available for this page";
       detailsBtn.textContent     = location.href.includes("generate-po") ? "Finance" : "Auto Fill Details";
+      detailsBtn.setAttribute("aria-label", detailsBtn.textContent);
 
       const leadReady = isLeadFormOpen();
       leadBtn.disabled      = !leadReady;
@@ -2764,18 +2604,30 @@
       nonFinanceBtn.style.display = location.href.includes("generate-po") ? "block" : "none";
       showMainView();
       popup.style.display = "flex";
+      launcher.setAttribute("aria-expanded", "true");
       positionPopup();
     }
 
     function closePopup() {
       popup.style.display  = "none";
+      launcher.setAttribute("aria-expanded", "false");
     }
+
+    launcher.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (popup.style.display === "none") openPopup(); else closePopup();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && popup.style.display !== "none") { closePopup(); launcher.focus(); }
+    });
 
     // ── Button handlers ──────────────────────────────────────────────────────
     leadBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       closePopup();
-      runTrackedAutofill("lead", fillLead).finally(flashMascotDone);
+      runTrackedAutofill("lead", fillLead).finally(flashLauncherDone);
     });
 
     detailsBtn.addEventListener("click", (e) => {
@@ -2783,13 +2635,13 @@
       const fn = getDetailsFn();
       if (!fn) return;
       closePopup();
-      runTrackedAutofill("details", fn).finally(flashMascotDone);
+      runTrackedAutofill("details", fn).finally(flashLauncherDone);
     });
 
     nonFinanceBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       closePopup();
-      runTrackedAutofill("details", () => fillPO({ financeMode: "none" })).finally(flashMascotDone);
+      runTrackedAutofill("details", () => fillPO({ financeMode: "none" })).finally(flashLauncherDone);
     });
 
     // Close when clicking outside
@@ -2799,12 +2651,15 @@
       }
     });
 
+    window.addEventListener("resize", () => { if (popup.style.display !== "none") positionPopup(); });
+
     // ── Drag logic ───────────────────────────────────────────────────────────
     let dragging = false;
     let didMove  = false;
     let ox = 0, oy = 0; // cursor offset from launcher top-left
 
     launcher.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
       dragging = true;
       didMove  = false;
       const r  = launcher.getBoundingClientRect();
@@ -3400,8 +3255,8 @@
       return;
     }
 
-    // Wait for the mascot/stats cache to load from chrome.storage.local before
-    // the launcher renders, so it doesn't briefly flash the default mascot.
+    // Wait for the profile/stats cache to load from chrome.storage.local before
+    // the launcher renders, so the launcher starts with the saved profile.
     loadPersistedState(() => {
       maybeShowWhatsNew();
 

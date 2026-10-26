@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.0.7 adds configurable fields and GitHub bug reporting to the existing FEP automation tools.
+Version 1.1.0 introduces a graphite FEP wordmark launcher, grouped tools, a consistent neutral interface, and redesigned custom-field and feedback dialogs. Saved rules and the existing FEP automation actions are preserved.
 
 ## Supported URLs
 
@@ -26,6 +26,8 @@ Version 1.0.7 adds configurable fields and GitHub bug reporting to the existing 
 
 - `manifest.json` - Chrome extension manifest (Manifest V3)
 - `content.js` - injected autofill logic and floating action buttons
+- `ui.css` - scoped launcher, settings, action, and notification styles
+- `custom-tools.js` - custom-field rules and feedback dialogs
 
 ## How to load in Chrome
 
