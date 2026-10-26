@@ -1,6 +1,8 @@
 name: Report a bug
 description: Report a problem with FEP Master Autofill Suite.
 title: "[Bug] "
+assignees:
+  - rahulcv1003
 body:
   - type: markdown
     attributes:
@@ -32,3 +34,4 @@ body:
         - Other
     validations:
       required: true
+
