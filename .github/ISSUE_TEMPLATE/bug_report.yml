@@ -1,0 +1,34 @@
+name: Report a bug
+description: Report a problem with FEP Master Autofill Suite.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Reports are public. Remove customer information,
+        project IDs, credentials, and payment details before submitting. The extension's
+        Report a bug button can prefill this form; you can also write a report here directly.
+  - type: textarea
+    id: report
+    attributes:
+      label: Report
+      description: Include the affected feature, steps to reproduce, expected result, actual result, and environment.
+      placeholder: |
+        Feature:
+        Steps to reproduce:
+        Expected result:
+        Actual result:
+        Environment (UAT / QA / staging / production):
+        Extension version:
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome / Chromium
+        - Edge
+        - Other
+    validations:
+      required: true
