@@ -5,7 +5,7 @@
   const FIELD = 'input:not([type="hidden"]):not([type="password"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]), textarea, select, .ant-select';
   const clean = value => String(value || "").replace(/\s+/g, " ").trim();
   const visible = element => !!element && !!element.getClientRects().length;
-  let panel, pickerCleanup, busy = false;
+  let panel, pickerCleanup, busy = false, autofillSession = null;
 
   function pagePattern(path = location.pathname) {
     return path.split("/").map(part => /^\d+$/.test(part) || /^[a-f\d]{24}$/i.test(part) || /^[a-f\d]{8}-[a-f\d-]{27,}$/i.test(part) ? "*" : part).join("/");
@@ -303,7 +303,7 @@
     document.addEventListener("mousemove",move,true);document.addEventListener("click",choose,true);document.addEventListener("keydown",cancel,true);
   }
   async function fillSaved({ silent = false } = {}) {
-    if (busy) { if(!silent)status("Custom autofill is already running."); return; }
+    if (busy || autofillSession) { if(!silent)status("Autofill is already running."); return; }
     busy=true;
     try {
       const applicable=(await rules()).filter(rule=>rule.enabled && matches(rule));
@@ -317,9 +317,45 @@
       return results;
     } finally {busy=false;}
   }
+  async function beginAutofill() {
+    if (autofillSession || busy) throw new Error("Autofill is already running. Wait for it to finish.");
+    autofillSession = { rules: [], applied: new Set() };
+    try { autofillSession.rules = (await rules()).filter(rule => rule.enabled && matches(rule)); }
+    catch (error) { autofillSession = null; throw error; }
+  }
+  async function applyRule(rule) {
+    try { await fill(rule); autofillSession.applied.add(rule.id); }
+    catch (error) { throw new Error(`Custom field “${rule.name}”: ${error.message}`); }
+  }
+  async function beforeField(target) {
+    if (!autofillSession || !target) return false;
+    const field = target.closest(".ant-select") || target;
+    // Newly added fields enter the sequence before the next built-in field
+    // below them, rather than being left to an end-of-run override pass.
+    const predecessors = autofillSession.rules.filter(rule => {
+      if (autofillSession.applied.has(rule.id)) return false;
+      let candidate;
+      try { candidate = resolve(rule); } catch (_) { return false; }
+      return candidate !== field && !!(candidate.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }).sort((a, b) => resolve(a).compareDocumentPosition(resolve(b)) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+    for (const rule of predecessors) await applyRule(rule);
+    const matching = autofillSession.rules.filter(rule => candidates(rule.locator).includes(field));
+    if (matching.length > 1) throw new Error("Multiple saved rules match this field. Disable the duplicate rule before autofilling.");
+    if (!matching.length) return false;
+    await applyRule(matching[0]);
+    return true;
+  }
+  async function finishAutofill() {
+    if (!autofillSession) return;
+    // Only new fields after the final built-in step remain. Fields overridden
+    // during the workflow are never replayed here.
+    const remaining = autofillSession.rules.filter(rule => !autofillSession.applied.has(rule.id));
+    for (const rule of remaining) await applyRule(rule);
+  }
+  function endAutofill() { autofillSession = null; }
   async function manager() {
     const items=await rules();
-    const body=modal("Custom Field Builder","Pick a field, save your value, and reuse it on matching pages. Saved rules override the built-in values each time you use Autofill on a matching page and environment. Rules stay in this browser. Avoid saving passwords or other secrets.");
+    const body=modal("Custom Field Builder","Pick a field, save your value, and reuse it on matching pages. Saved values replace built-in defaults at each field’s turn, before dependent fields are filled. Rules stay in this browser. Avoid saving passwords or other secrets.");
     const actions=el("div",undefined,body);actions.className="actions";
     button("Pick a field on this page",actions,pick);
     button("Fill saved fields",actions,()=>fillSaved(),true);
@@ -363,5 +399,5 @@
       status("Review and submit the report in the GitHub tab. It has not been submitted by the extension.");
     });
   }
-  globalThis.FepCustomTools=Object.freeze({manager,fillSaved,report});
+  globalThis.FepCustomTools=Object.freeze({manager,fillSaved,report,beginAutofill,beforeField,finishAutofill,endAutofill});
 })();

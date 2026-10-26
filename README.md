@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.1.0 introduces a graphite FEP wordmark launcher, grouped tools, a consistent neutral interface, and redesigned custom-field and feedback dialogs. Saved rules and the existing FEP automation actions are preserved.
+Version 1.1.1 applies saved custom values at each field’s turn in the existing autofill workflow, before dependent fields. It retains the graphite FEP launcher and redesigned tools introduced in 1.1.0.
 
 ## Supported URLs
 
@@ -54,7 +54,7 @@ Version 1.1.0 introduces a graphite FEP wordmark launcher, grouped tools, a cons
 1. Open the FEP form and click the floating launcher.
 2. Choose **Custom Field Builder**, then **Pick a field on this page**. Click the field you want to configure. Press Escape to cancel picking.
 3. Confirm the detected field type and enter the value. For dropdowns, enter the exact visible option text. Choose the environment and page path, then save.
-4. Use **Test** to check a single rule, or **Fill saved fields** for all matching enabled rules. Saved rules also run after Fill Lead, Auto Fill Details, and Non Finance, overriding built-in values where they match.
+4. Use **Test** to check a single rule, or **Fill saved fields** for all matching enabled rules. During Fill Lead, Auto Fill Details, and Non Finance, saved rules replace defaults at the matching field step, before dependent fields are filled. Newly added fields are inserted before the next built-in field below them on the page.
 5. Edit, enable, disable, or delete rules from the builder. Rules are stored in Chrome extension local storage, not in the FEP site.
 
 Supported: text, number, email, textarea, native dates, native single-select dropdowns, Ant Design single-select dropdowns, checkboxes, and radio options. Multi-selects, file uploads, password fields, and read-only date widgets are not supported. Numeric, MongoDB, and UUID path segments default to `*` so rules can apply to different project IDs. Query parameters are ignored; review the path when two forms share a route. Duplicate matches use the selected occurrence and expected match count; recheck rules after page layout changes. Forms are never submitted automatically.

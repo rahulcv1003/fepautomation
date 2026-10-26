@@ -99,11 +99,11 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.1.0",
+    version: "1.1.1",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [{
-      title: "A new home for FEP tools.",
-      items: ["A focused new home for your FEP tools. Cleaner controls, quieter forms, and one unmistakable launcher.", "Your saved fields, feedback, and autofill actions are all right where you need them."],
+      title: "Saved values, in sequence.",
+      items: ["Saved values now replace defaults at each field’s turn, before dependent fields are filled.", "New custom fields enter the workflow in page order. If a saved value fails, autofill stops with a clear message."],
       final: true
     }]
   };
@@ -493,11 +493,18 @@
   async function runTrackedAutofill(type, fn) {
     const startedAt = performance.now();
     const fieldsBefore = fieldTouchCount;
+    let sessionStarted = false;
     try {
+      await globalThis.FepCustomTools.beginAutofill();
+      sessionStarted = true;
       const result = await fn();
-      await globalThis.FepCustomTools.fillSaved({ silent: true });
+      await globalThis.FepCustomTools.finishAutofill();
       return result;
+    } catch (error) {
+      showApiToast("Autofill stopped", false, error.message);
+      console.error(LOG_PREFIX, "Autofill stopped", error);
     } finally {
+      if (sessionStarted) globalThis.FepCustomTools.endAutofill();
       const fieldsTouched = fieldTouchCount - fieldsBefore;
       recordAutofillRun(type, performance.now() - startedAt, fieldsTouched);
     }
@@ -701,6 +708,7 @@
     for (let attempt = 0; attempt < retries; attempt += 1) {
       const { item, select } = await waitFormSelectByLabel(label, occurrence, waitMs);
       if (!item || !select) return false;
+      if (await globalThis.FepCustomTools.beforeField(select)) { countField(); return true; }
 
       realClick(select);
 
@@ -732,6 +740,7 @@
     for (let attempt = 0; attempt < retries; attempt += 1) {
       const { item, select } = await waitFormSelectByLabel(label, occurrence, waitMs);
       if (!item || !select) return false;
+      if (await globalThis.FepCustomTools.beforeField(select)) { countField(); return true; }
 
       realClick(select);
 
@@ -794,6 +803,7 @@
     const wanted = normalize(text);
     const { item, select } = await waitFormSelectByLabel(label, occurrence, 1000);
     if (!item || !select) return false;
+    if (await globalThis.FepCustomTools.beforeField(select)) { countField(); return true; }
 
     realClick(select);
     await sleep(50);
@@ -841,6 +851,7 @@
     const { item, select } = await waitFormSelectByLabel(label, occurrence, waitMs);
     debugLeadTiming(`${label} wait select`, stepStart);
     if (!item || !select) return false;
+    if (await globalThis.FepCustomTools.beforeField(select)) { countField(); return true; }
 
     stepStart = performance.now();
     realClick(select);
@@ -901,6 +912,7 @@
       return;
     }
 
+    if (await globalThis.FepCustomTools.beforeField(input)) { countField(); return true; }
     input.focus();
     setReactValue(input, value);
     countField();
@@ -914,6 +926,7 @@
       return;
     }
 
+    if (await globalThis.FepCustomTools.beforeField(input)) { countField(); return true; }
     input.focus();
     setReactValue(input, value);
     countField();
@@ -929,6 +942,7 @@
       return;
     }
 
+    if (await globalThis.FepCustomTools.beforeField(input)) { countField(); return true; }
     input.focus();
     setReactValue(input, value);
     countField();
@@ -942,6 +956,7 @@
       return;
     }
 
+    if (await globalThis.FepCustomTools.beforeField(input)) { countField(); return true; }
     input.focus();
     setReactValue(input, dateStr);
     input.blur();
@@ -963,6 +978,7 @@
     const input = item && item.querySelector(".ant-picker input, input");
     if (!input || input.disabled || input.readOnly) return false;
 
+    if (await globalThis.FepCustomTools.beforeField(input)) { countField(); return true; }
     input.focus();
     setReactValue(input, dateStr);
     pressKey(input, "Enter");
@@ -980,6 +996,8 @@
     );
     const choice = candidates.find((el) => normalize(el.innerText || el.textContent) === wanted);
     if (!choice) return false;
+    const control = choice.querySelector("input");
+    if (control && await globalThis.FepCustomTools.beforeField(control)) { countField(); return true; }
 
     realClick(choice);
     countField();
@@ -1018,7 +1036,7 @@
     await timedLeadStep("Lead Source", () => selectFirstDropdownOptionFast("Lead Source"));
 
     const comment = document.querySelector("textarea");
-    if (comment) {
+    if (comment && !(await globalThis.FepCustomTools.beforeField(comment))) {
       setReactValue(comment, "Created using autofill");
       countField();
     }
@@ -1073,7 +1091,7 @@
 
     const textareas = Array.from(document.querySelectorAll("textarea")).filter((el) => !el.disabled && !el.readOnly);
     const remarks = textareas[textareas.length - 1];
-    if (remarks) {
+    if (remarks && !(await globalThis.FepCustomTools.beforeField(remarks))) {
       setReactValue(remarks, "Created using autofill");
       countField();
     }
@@ -1088,7 +1106,7 @@
     const subsidy = document.querySelector(
       '#subsidyEnergyRequirements input[value="Yes"]'
     );
-    if (subsidy) {
+    if (subsidy && !(await globalThis.FepCustomTools.beforeField(subsidy))) {
       subsidy.click();
       countField();
     }
@@ -1177,6 +1195,7 @@
       return false;
     }
 
+    if (await globalThis.FepCustomTools.beforeField(select)) { countField(); return true; }
     realClick(select);
     await sleep(50); // one tick for the dropdown panel to mount
 
@@ -1288,11 +1307,12 @@
       return normalize(input.placeholder).includes("serial number");
     });
 
-    serialInputs.forEach((input, index) => {
+    for (const [index, input] of serialInputs.entries()) {
+      if (await globalThis.FepCustomTools.beforeField(input)) { countField(); continue; }
       input.focus();
       setReactValue(input, makeSerialNumber(index));
       countField();
-    });
+    }
 
     if (serialInputs.length) await sleep(100);
     return serialInputs.length;
@@ -1530,6 +1550,7 @@
       ).filter((el) => !el.disabled && !el.readOnly && !el.value);
 
       for (const input of dateInputs) {
+        if (await globalThis.FepCustomTools.beforeField(input)) { countField(); continue; }
         countField();
         const d = new Date();
         const typed = [
@@ -1617,6 +1638,7 @@
       );
 
       for (const input of textInputs) {
+        if (await globalThis.FepCustomTools.beforeField(input)) { countField(); continue; }
         input.focus();
         // Ant Design InputNumber wraps its <input> inside .ant-input-number
         // — feeding it a string like "TEST-001" is silently rejected.
@@ -1635,6 +1657,7 @@
       ).filter((el) => !el.disabled && !el.readOnly && !el.value);
 
       for (const ta of textareas) {
+        if (await globalThis.FepCustomTools.beforeField(ta)) { countField(); continue; }
         ta.focus();
         setReactValue(ta, "Test remarks");
         countField();
@@ -1663,6 +1686,7 @@
         (b) => normalize(b.innerText) === "save"
       );
       if (saveBtn) {
+        await globalThis.FepCustomTools.beforeField(saveBtn);
         realClick(saveBtn);
         await waitForActionToSettle(saveBtn, section, 2000, 20000);
       }
@@ -1854,6 +1878,7 @@
         (b) => normalize(b.innerText) === actionText && !b.disabled
       );
       if (actionBtn) {
+        await globalThis.FepCustomTools.beforeField(actionBtn);
         realClick(actionBtn);
         await waitForActionToSettle(actionBtn, section, 3000, 20000);
       } else {

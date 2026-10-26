@@ -8,18 +8,18 @@ const vm=require('node:vm');
   const source=fs.readFileSync(path.join(root,'content.js'),'utf8');
   const tracked=source.slice(source.indexOf('  async function runTrackedAutofill('),source.indexOf('  function normalize('));
   const order=[];
-  const sandbox={performance,fieldTouchCount:0,recordAutofillRun:()=>order.push('record'),FepCustomTools:{fillSaved:async()=>order.push('rules')}};
+  const sandbox={performance,fieldTouchCount:0,recordAutofillRun:()=>order.push('record'),FepCustomTools:{beginAutofill:async()=>order.push('begin'),finishAutofill:async()=>order.push('finish-new-fields'),endAutofill:()=>order.push('end')}};
   vm.createContext(sandbox);vm.runInContext(tracked,sandbox);
   await sandbox.runTrackedAutofill('lead',async()=>order.push('built-in'));
-  assert.deepEqual(order,['built-in','rules','record'],'Saved rules must override built-in autofill values');
+  assert.deepEqual(order,['begin','built-in','finish-new-fields','end','record'],'Run lifecycle must not replay saved overrides after the workflow');
   const browser=await chromium.launch({headless:true});
   const context=await browser.newContext();
   try{
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.1.0'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.1.0'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.1.1'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.1.1'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
