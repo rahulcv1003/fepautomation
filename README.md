@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.0.6 adds configurable fields and GitHub bug reporting to the existing FEP automation tools.
+Version 1.0.7 adds configurable fields and GitHub bug reporting to the existing FEP automation tools.
 
 ## Supported URLs
 

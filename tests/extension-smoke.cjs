@@ -18,8 +18,8 @@ const vm=require('node:vm');
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.6'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.0.6'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.7'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.0.7'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};

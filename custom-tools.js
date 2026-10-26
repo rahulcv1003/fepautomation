@@ -72,15 +72,24 @@
     }
     return element;
   }
-  function setValue(element, value) {
+  function setValue(element, value, commit = true) {
     const prototype = element.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype :
       element.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
     Object.getOwnPropertyDescriptor(prototype, "value").set.call(element, value);
     element.dispatchEvent(new Event("input", { bubbles: true }));
     element.dispatchEvent(new Event("change", { bubbles: true }));
-    element.dispatchEvent(new Event("blur", { bubbles: true }));
+    if (commit) element.dispatchEvent(new Event("blur", { bubbles: true }));
   }
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  function clickControl(element) {
+    element.scrollIntoView({ block: "nearest" });
+    const options = { bubbles: true, cancelable: true, composed: true, view: window, button: 0 };
+    if (window.PointerEvent) element.dispatchEvent(new PointerEvent("pointerdown", { ...options, buttons: 1, pointerId: 1, pointerType: "mouse" }));
+    element.dispatchEvent(new MouseEvent("mousedown", { ...options, buttons: 1 }));
+    if (window.PointerEvent) element.dispatchEvent(new PointerEvent("pointerup", { ...options, buttons: 0, pointerId: 1, pointerType: "mouse" }));
+    element.dispatchEvent(new MouseEvent("mouseup", { ...options, buttons: 0 }));
+    element.dispatchEvent(new MouseEvent("click", { ...options, buttons: 0 }));
+  }
   function valueMatches(element, expected) {
     if (element.value === String(expected)) return true;
     // Ant InputNumber uses type=text, but normalizes values such as 0123 to 123.
@@ -102,35 +111,49 @@
       if (element.classList.contains("ant-select-multiple")) throw new Error("Multi-select dropdowns are not supported yet.");
       const trigger = element.querySelector(".ant-select-selector");
       if (!trigger) throw new Error("Dropdown control is unavailable.");
-      trigger.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      trigger.click();
       const input = element.querySelector("input");
+      input?.focus();
+      if (input?.getAttribute("aria-expanded") !== "true") clickControl(trigger);
       const dropdownId = input?.getAttribute("aria-controls") || input?.getAttribute("aria-owns");
       const findDropdown = () => {
         const owned = dropdownId && document.getElementById(dropdownId);
-        if (owned) return owned.closest(".ant-select-dropdown") || owned;
+        if (owned) {
+          const dropdown = owned.closest(".ant-select-dropdown") || owned;
+          if (visible(dropdown)) return dropdown;
+        }
         const shown = Array.from(document.querySelectorAll(".ant-select-dropdown")).filter(visible);
         return shown.length === 1 ? shown[0] : null;
       };
       let selected = false;
+      let searched = false;
       try {
-        if (input && !input.readOnly) { input.focus(); setValue(input, rule.value); }
         for (let attempt = 0; attempt < 40; attempt++) {
           if (!matches(rule)) throw new Error("Page changed while filling.");
           const dropdown = findDropdown();
-          const options = dropdown ? Array.from(dropdown.querySelectorAll(".ant-select-item-option")) : [];
+          const options = dropdown ? Array.from(dropdown.querySelectorAll(".ant-select-item-option")).filter(visible) : [];
           const option = options.find(item => clean(item.querySelector(".ant-select-item-option-content")?.textContent || item.textContent) === clean(rule.value) &&
             !item.classList.contains("ant-select-item-option-disabled") && item.getAttribute("aria-disabled") !== "true");
-          if (option) { option.click(); selected = true; break; }
+          if (option) { clickControl(option); selected = true; break; }
+          // Try the loaded options first. Search without blurring: blur can close
+          // rc-select before its option receives the mouse events that select it.
+          if (attempt >= 4 && !searched && input && !input.readOnly && element.classList.contains("ant-select-show-search")) {
+            setValue(input, rule.value, false);
+            searched = true;
+          }
           await wait(75);
         }
         if (!selected) throw new Error(`Dropdown option unavailable: ${rule.value}`);
-        await wait(100);
-        const text = clean(element.querySelector(".ant-select-selection-item")?.textContent);
-        if (text !== clean(rule.value)) throw new Error("Dropdown selection was not confirmed.");
+        let confirmed = false;
+        for (let attempt = 0; attempt < 10; attempt++) {
+          await wait(60);
+          if (!matches(rule)) throw new Error("Page changed while filling.");
+          const current = resolve(rule);
+          if (clean(current.querySelector(".ant-select-selection-item")?.textContent) === clean(rule.value)) { confirmed = true; break; }
+        }
+        if (!confirmed) throw new Error("Dropdown selection was not confirmed. The search text alone is not a selected value.");
       } finally {
-        if (!selected && input) setValue(input, "");
-        input?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        if (!selected && searched && input?.isConnected) setValue(input, "", false);
+        if (input?.isConnected) input.blur();
       }
     } else if (type === "dropdown") {
       const options = Array.from(element.options).filter(option => !option.disabled && !option.parentElement.disabled && clean(option.textContent) === clean(rule.value));
