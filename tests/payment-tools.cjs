@@ -61,11 +61,20 @@ async function backgroundChecks(){
   await page.goto('https://qa-fep.freyrenergy.com/test');
   await page.evaluate(()=>{
    window.calls=[];window.responseMode='ok';
-   window.chrome={runtime:{getManifest:()=>({version:'1.2.0'}),sendMessage:async request=>{calls.push(request);await new Promise(resolve=>setTimeout(resolve,150));if(responseMode==='network')return {error:'Failed to fetch'};return {ok:responseMode!=='http',status:responseMode==='http'?422:200,text:responseMode==='http'?'Invalid invoice':'{"success":true}',elapsedMs:150};}},storage:{local:{get:async()=>({}),set:async()=>{}}}};
+   window.chrome={runtime:{getManifest:()=>({version:'1.2.1'}),sendMessage:async request=>{calls.push(request);await new Promise(resolve=>setTimeout(resolve,150));if(responseMode==='network')return {error:'Failed to fetch'};return {ok:responseMode!=='http',status:responseMode==='http'?422:200,text:responseMode==='http'?'Invalid invoice':'{"success":true}',elapsedMs:150};}},storage:{local:{get:async()=>({}),set:async()=>{}}}};
   });
   await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'payment-tools.js')});
   await page.evaluate(()=>FepPaymentTools.open({projectId:'TEST-PROPOSAL',amount:500,fiscalYear:'26-27'}));
   assert.equal(await page.getByLabel('Payment environment').inputValue(),'qa');
+  assert.equal(await page.getByLabel('proposal_id',{exact:true}).inputValue(),'2000001118');
+  assert.equal(await page.getByLabel('Invoice_ID',{exact:true}).inputValue(),'FE/26-27/2000001118');
+  assert.equal(await page.getByLabel('estimate_created_at',{exact:true}).inputValue(),'2026-06-30T14:31:18+0530');
+  assert.equal(await page.getByLabel('invoice_created_at',{exact:true}).inputValue(),'2026-06-30T18:14:39+0530');
+  assert.equal(await page.getByLabel('details.invoice_date',{exact:true}).inputValue(),'2026-06-30');
+  assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'15000');
+  assert.equal(await page.getByLabel('details.transaction_id',{exact:true}).inputValue(),'1234567fff');
+  assert.equal(await page.getByLabel('details.payment_link_id',{exact:true}).inputValue(),'');
+  assert.equal(await page.getByLabel('details.paid_amount type',{exact:true}).count(),0);
   await page.getByText('Import from Postman cURL',{exact:true}).click();
   await page.getByLabel('Postman cURL').fill(commented);await page.getByRole('button',{name:'Import request',exact:true}).click();
   assert.equal(await page.getByLabel('Payment environment').inputValue(),'uat');
@@ -100,8 +109,18 @@ async function backgroundChecks(){
   assert(await page.getByRole('button',{name:'Check payment before retrying',exact:true}).isDisabled());
   await page.getByRole('button',{name:'Close',exact:true}).click();
   await page.evaluate(()=>FepPaymentTools.open({projectId:'NEW-PROJECT',amount:250,fiscalYear:'26-27'}));
-  assert.equal(await page.getByLabel('proposal_id',{exact:true}).inputValue(),'NEW-PROJECT','Switching project must not reuse the previous request');
-  assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'250');
+  assert.equal(await page.getByLabel('proposal_id',{exact:true}).inputValue(),'2000001118','A new project starts from the requested sample template');
+  assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'15000');
+  await page.getByLabel('Payment environment').selectOption('staging');
+  await page.getByLabel('details.paid_amount',{exact:true}).fill('999');
+  await page.getByRole('button',{name:'Reset to sample',exact:true}).click();
+  assert.equal(await page.getByLabel('Payment environment').inputValue(),'staging');
+  assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'15000');
+  await page.getByRole('button',{name:'Review payment request',exact:true}).click();
+  const sample=JSON.parse(await page.getByLabel('Payload preview').inputValue());
+  assert.equal(sample.action.delete,false);assert.equal(sample.details.payment_link_id,null);
+  assert.equal(sample.details.paid_amount,15000);assert.equal(sample.details.invoice_date,'2026-06-30');
+  assert(!Object.hasOwn(sample,'Estimate_ID'));assert(!Object.hasOwn(sample.details,'waived_amount'));
   console.log('PASS: cURL/comment parsing, endpoint restrictions, JSON type preservation, edited payment review/send, headers, HTTP/plain-text/network responses, duplicate protection, response retention, cURL export. All sends simulated.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

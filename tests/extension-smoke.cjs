@@ -18,8 +18,8 @@ const vm=require('node:vm');
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label><div><span>Project ID</span><span>1234567890</span></div><div id="paymentMethod"><div class="ant-card-body"><span>Advance amount: Rs. 15000</span></div></div>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.2.0'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.2.0'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.2.1'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.2.1'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
@@ -56,7 +56,7 @@ const vm=require('node:vm');
     await page.setViewportSize({width:1280,height:900});
     await page.getByRole('button',{name:'Payments',exact:true}).click();
     await page.getByRole('heading',{name:'Payments',exact:true}).waitFor();
-    assert.equal(await page.getByLabel('proposal_id',{exact:true}).inputValue(),'1234567890');
+    assert.equal(await page.getByLabel('proposal_id',{exact:true}).inputValue(),'2000001118');
     assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'15000');
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await page.locator('#fep-launcher').click();

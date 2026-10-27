@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.2.0 adds an editable payment request console. It retains the compact icon-only launcher and resizable tool panel. Drag the panel’s upper-left corner to resize it; use arrow keys when the resize handle has focus, or double-click it to reset. Your preferred size is saved in extension local storage. Saved field values still apply at their turn before dependent fields.
+Version 1.2.1 prefills the payment console with the supplied sample values and removes manual type controls. It retains the compact icon-only launcher and resizable tool panel. Drag the panel’s upper-left corner to resize it; use arrow keys when the resize handle has focus, or double-click it to reset. Your preferred size is saved in extension local storage. Saved field values still apply at their turn before dependent fields.
 
 ## Supported URLs
 
@@ -61,10 +61,10 @@ Supported: text, number, email, textarea, native dates, native single-select dro
 
 ## Payments
 
-Open **Payments** in the launcher or click **Pay Advance Payment** on the PO confirmation page. The current numeric project ID and advance amount are prefilled when available; the request is not sent automatically.
+Open **Payments** in the launcher or click **Pay Advance Payment** on the PO confirmation page. The supplied sample payload is prefilled exactly, including proposal `2000001118`, invoice `FE/26-27/2000001118`, June 30 timestamps, amounts, links, and transaction IDs. Users edit the values needed for their request; no request is sent automatically. The endpoint still follows the selected environment.
 
 - Import the Postman cURL for any configured payment environment, including a body with Postman JSON comments. The trailing empty query string in exported examples is normalized away.
-- Edit nested payload fields and their JSON types. Imported optional fields are preserved. Use **Advanced: replace JSON payload** to add or remove fields, or **Show cURL** to export your edited request.
+- Edit nested payload values without choosing data types. Numbers and booleans are preserved automatically; unset optional fields remain null. **Reset to sample** restores the sample values while preserving the selected environment. Imported optional fields are preserved. Use **Advanced: replace JSON payload** to add or remove fields, or **Show cURL** to export your edited request.
 - Choose UAT, QA, staging, or production explicitly. The console can target a different environment from the open page. Requests are restricted to the four configured payment endpoints; this is not a general-purpose HTTP client.
 - Review the proposal ID, amounts, environment, headers, and complete payload. **Send to [environment]** performs one POST and shows HTTP status, elapsed time, and the response text. No automatic retries are performed.
 - A network failure or timeout has an unknown outcome. Verify the project's payment record before resending through the editor. Duplicate in-flight requests from the same tab are rejected.

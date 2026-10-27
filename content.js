@@ -99,11 +99,11 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.2.0",
+    version: "1.2.1",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [{
-      title: "Payments, without switching apps.",
-      items: ["Import a Postman cURL or start a payment request in the extension.", "Edit typed payload fields, review the environment and amounts, then send and inspect the response."],
+      title: "Your payment template, ready.",
+      items: ["The payment editor starts with your sample values. Update what you need, then review and send.", "Data types are handled automatically. Reset to sample restores the values without changing the environment."],
       final: true
     }]
   };

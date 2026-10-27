@@ -89,8 +89,22 @@
   function initial(context) {
     const host=location.hostname;
     const environment=host.startsWith('uat-')?'uat':host.startsWith('qa-')?'qa':host.startsWith('stg-')?'staging':host==='fep.freyrenergy.com'?'production':'uat';
-    const now=new Date(),date=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    return {environment,headers:{},payload:{proposal_id:context.projectId || "",payment_stage:"Advance Invoice",Invoice_ID:context.projectId?`FE/${context.fiscalYear || ""}/${context.projectId}`:"",estimate_status:"invoiced",invoice_status:"paid",action:{delete:false},details:{invoice_amount:context.amount || 0,paid_amount:context.amount || 0,due_amount:0,estimate_date:null,invoice_date:date,payment_link:"",payment_link_id:null,payment_type:null,razorpay_payment_id:"",razorpay_order_id:"",transaction_id:""},invoice_url:""}};
+    return {environment,headers:{},payload:{
+      proposal_id:"2000001118",
+      payment_stage:"Advance Invoice",
+      Invoice_ID:"FE/26-27/2000001118",
+      estimate_status:"invoiced",
+      invoice_status:"paid",
+      estimate_created_at:"2026-06-30T14:31:18+0530",
+      invoice_created_at:"2026-06-30T18:14:39+0530",
+      action:{delete:false},
+      details:{
+        invoice_amount:15000,paid_amount:15000,due_amount:0,estimate_date:null,invoice_date:"2026-06-30",
+        payment_link:"https://zohosecurepay.com/books/freyrenergy/secure?CInvoiceID=2-04503f3f3e28ffd03607fcbfbd3f1ed1899a136855339ee2573cfd27dcedf5176af324efdb0b412cd8941b209c61f14db69a47808aab99c24ffa905db4b66b916f318a5209e21896 ",
+        payment_link_id:null,payment_type:null,razorpay_payment_id:"3453545",razorpay_order_id:"23563545",transaction_id:"1234567fff"
+      },
+      invoice_url:"https://zohosecurepay.com/books/freyrenergy/secure?CInvoiceID=2-04503f3f3e28ffd03b949a1d5556d6bc4fb6b5d5f754656ce7a2903d9f34a3df95dd13647a447af0d8941b209c61f14d131d2b736b6249cbece7f6059cbf86f16f318a5209e21896"
+    }};
   }
   function leaves(value,path=[],result=[]) {
     if(value && typeof value==='object' && !Array.isArray(value) && Object.keys(value).length){for(const [key,child] of Object.entries(value))leaves(child,[...path,key],result);}
@@ -100,7 +114,7 @@
   function typeOf(value){return value===null?'null':typeof value==='object'?'json':typeof value;}
   function parseValue(type,text){
     if(type==='string')return text;
-    if(type==='null')return null;
+    if(type==='null')return text.trim()==='' || text.trim()==='null' ? null : text;
     if(type==='boolean'){if(!['true','false'].includes(text.trim()))throw new Error('Use true or false for a boolean.');return text.trim()==='true';}
     if(type==='number'){if(!text.trim() || !Number.isFinite(Number(text)))throw new Error('Enter a valid number.');return Number(text);}
     return JSON.parse(text);
@@ -113,8 +127,8 @@
   }
   function render() {
     const {modal,el,input,select,button,status}=ui();
-    const body=modal("Payments","Edit a payment request, review its destination and payload, then send it directly. Drafts remain in this page’s memory until you refresh.");
-    el('style',`.payment-grid{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px}.payment-grid label{margin-top:10px}.payment-grid input,.payment-grid select{font-size:12px}.payment-endpoint{font:11px/1.6 ui-monospace,monospace;overflow-wrap:anywhere;background:#f0f1f2;border-radius:6px;padding:10px}.payment-response{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace;max-height:300px;overflow:auto;border:1px solid #dedfe2;padding:14px;border-radius:8px}details{margin-top:18px}summary{cursor:pointer;font-weight:550}h3{font-size:13px;margin:24px 0 6px}.payment-review{padding:14px;background:#f1f2f3;border-radius:8px} .payment-grid .null-value{color:#8b8d92}`,body);
+    const body=modal("Payments","Your sample payment payload is filled in. Update the project, invoice, amounts, or other values as needed, then review and send. The environment controls the endpoint.");
+    el('style',`.payment-grid{display:block}.payment-grid label{margin-top:10px}.payment-grid input,.payment-grid select{font-size:12px}.payment-endpoint{font:11px/1.6 ui-monospace,monospace;overflow-wrap:anywhere;background:#f0f1f2;border-radius:6px;padding:10px}.payment-response{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace;max-height:300px;overflow:auto;border:1px solid #dedfe2;padding:14px;border-radius:8px}details{margin-top:18px}summary{cursor:pointer;font-weight:550}h3{font-size:13px;margin:24px 0 6px}.payment-review{padding:14px;background:#f1f2f3;border-radius:8px} .payment-grid .null-value{color:#8b8d92}`,body);
     const importer=el('details',undefined,body);el('summary','Import from Postman cURL',importer);
     const curl=input('Postman cURL',importer,'','textarea');curl.placeholder="Paste curl --location 'https://…' --header … --data …";
     button('Import request',importer,()=>{const imported=importCurl(curl.value);draft=imported;render();status('Imported. Check the environment and edited values before sending.');},true);
@@ -128,15 +142,20 @@
     const rows=[];
     for(const leaf of leaves(draft.payload)){
       const grid=el('div',undefined,body);grid.className='payment-grid';
-      const value=input(leaf.path.join('.'),grid,typeOf(leaf.value)==='json'?JSON.stringify(leaf.value):leaf.value===null?'null':String(leaf.value));
-      const type=select(`${leaf.path.join('.')} type`,grid,[['string','Text'],['number','Number'],['boolean','Boolean'],['null','Null'],['json','JSON']],typeOf(leaf.value));
-      type.parentElement.firstChild.textContent='Type';
-      type.addEventListener('change',()=>{if(type.value==='null')value.value='null';if(type.value==='boolean'&&!['true','false'].includes(value.value))value.value='false';});
+      const type=typeOf(leaf.value);
+      let value;
+      if(type==='boolean')value=select(leaf.path.join('.'),grid,[['false','false'],['true','true']],String(leaf.value));
+      else {
+        value=input(leaf.path.join('.'),grid,type==='json'?JSON.stringify(leaf.value):leaf.value===null?'':String(leaf.value));
+        if(type==='number'){value.type='number';value.step='any';}
+        if(type==='null')value.placeholder='Not set';
+        if(/(?:^|_)date$/.test(leaf.path.at(-1)) && leaf.value!==null)value.type='date';
+      }
       rows.push({...leaf,input:value,type});
     }
     const read=(validatePayload=true)=>{
       const payload=JSON.parse(JSON.stringify(draft.payload));
-      for(const row of rows){try{let current=payload;for(const key of row.path.slice(0,-1))current=current[key];current[row.path.at(-1)]=parseValue(row.type.value,row.input.value);}catch(error){throw new Error(`${row.path.join('.')}: ${error.message}`);}}
+      for(const row of rows){try{let current=payload;for(const key of row.path.slice(0,-1))current=current[key];current[row.path.at(-1)]=parseValue(row.type,row.input.value);}catch(error){throw new Error(`${row.path.join('.')}: ${error.message}`);}}
       const nextHeaders={};for(const [key,node]of Object.entries(headerInputs))if(node.value.trim())nextHeaders[key]=node.value.trim();
       return {environment:environment.value,headers:nextHeaders,payload:validatePayload?validate(payload):payload};
     };
@@ -150,7 +169,7 @@
     const actions=el('div',undefined,body);actions.className='actions';
     button('Review payment request',actions,()=>{draft=read();review();});
     button('Show cURL',actions,()=>{exportText.value=makeCurl(read());exported.open=true;status('cURL is ready to copy in Export cURL.');},true);
-    button('New draft',actions,()=>{draft=initial({});render();status('Started a new blank request.');},true);
+    button('Reset to sample',actions,()=>{draft={...initial({}),environment:environment.value};render();status('Restored your sample values. The selected environment is unchanged.');},true);
     if(lastResponse){el('h3',`Last response · ${lastResponse.environment.toUpperCase()} · proposal ${lastResponse.proposalId}`,body);const previous=el('pre',lastResponse.text,body);previous.className='payment-response';previous.setAttribute('aria-label','Last payment response');}
   }
   function review() {
