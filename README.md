@@ -10,7 +10,7 @@ The extension injects autofill buttons directly into supported FEP pages:
 - `Auto Fill Proposal`
 - `Auto Fill PO`
 
-Version 1.2.1 prefills the payment console with the supplied sample values and removes manual type controls. It retains the compact icon-only launcher and resizable tool panel. Drag the panel’s upper-left corner to resize it; use arrow keys when the resize handle has focus, or double-click it to reset. Your preferred size is saved in extension local storage. Saved field values still apply at their turn before dependent fields.
+Version 1.2.2 prefills the payment console with the supplied sample values and removes manual type controls. It retains the compact icon-only launcher and resizable tool panel. Drag the panel’s upper-left corner to resize it; use arrow keys when the resize handle has focus, or double-click it to reset. Your preferred size is saved in extension local storage. Saved field values still apply at their turn before dependent fields.
 
 ## Supported URLs
 
@@ -52,7 +52,7 @@ Version 1.2.1 prefills the payment console with the supplied sample values and r
 ## Custom Field Builder
 
 1. Open the FEP form and click the floating launcher.
-2. Choose **Custom Field Builder**, then **Pick a field on this page**. Click the field you want to configure. Press Escape to cancel picking.
+2. Open **Settings → Custom Field Builder**, then **Pick a field on this page**. Click the field you want to configure. Press Escape to cancel picking.
 3. Confirm the detected field type and enter the value. For dropdowns, enter the exact visible option text. Choose the environment and page path, then save.
 4. Use **Test** to check a single rule, or **Fill saved fields** for all matching enabled rules. During Fill Lead, Auto Fill Details, and Non Finance, saved rules replace defaults at the matching field step, before dependent fields are filled. Newly added fields are inserted before the next built-in field below them on the page.
 5. Edit, enable, disable, or delete rules from the builder. Rules are stored in Chrome extension local storage, not in the FEP site.
@@ -73,7 +73,7 @@ Open **Payments** in the launcher or click **Pay Advance Payment** on the PO con
 
 ## Feedback & feature requests
 
-Choose **Feedback & feature requests** from the launcher. Enter the summary, feature, steps, expected result, and actual result. **Review report on GitHub** opens the structured issue form in [rahulcv1003/fepautomation](https://github.com/rahulcv1003/fepautomation/issues/new?template=bug_report.yml). Review it and click **Submit new issue** there. A GitHub account is required. Reports are public; omit customer and payment details. Only extension version, hostname, and browser family are added automatically; page URLs, project IDs, field values, and request payloads are not collected. Repository notification settings control delivery to its owner.
+Choose **Settings → Feedback & feature requests** from the launcher. Enter the summary, feature, steps, expected result, and actual result. **Review report on GitHub** opens the structured issue form in [rahulcv1003/fepautomation](https://github.com/rahulcv1003/fepautomation/issues/new?template=bug_report.yml). Review it and click **Submit new issue** there. A GitHub account is required. Reports are public; omit customer and payment details. Only extension version, hostname, and browser family are added automatically; page URLs, project IDs, field values, and request payloads are not collected. Repository notification settings control delivery to its owner.
 
 ## Development checks
 

@@ -18,8 +18,8 @@ const vm=require('node:vm');
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label><div><span>Project ID</span><span>1234567890</span></div><div id="paymentMethod"><div class="ant-card-body"><span>Advance amount: Rs. 15000</span></div></div>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.2.1'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.2.1'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.2.2'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.2.2'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
@@ -60,6 +60,7 @@ const vm=require('node:vm');
     assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'15000');
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await page.locator('#fep-launcher').click();
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.getByRole('button',{name:'Custom Field Builder',exact:true}).click();
     await page.getByRole('button',{name:'Pick a field on this page'}).click();
     await page.locator('input[name=contact]').click();
@@ -72,12 +73,14 @@ const vm=require('node:vm');
     await page.locator('#fep-launcher').click();
     const restored=await page.locator('#fep-popup').boundingBox();
     assert(Math.abs(restored.width-dragged.width)<2 && Math.abs(restored.height-dragged.height)<2,'Panel size persists after page reload');
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.getByRole('button',{name:'Custom Field Builder',exact:true}).click();
     await page.getByRole('button',{name:'Fill saved fields',exact:true}).click();
     await page.getByRole('heading',{name:'Custom autofill results'}).waitFor();
     assert.equal(await page.locator('input[name=contact]').inputValue(),'Persistent extension value');
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await page.locator('#fep-launcher').click();
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.getByRole('button',{name:'Feedback & feature requests',exact:true}).click();
     await page.getByRole('heading',{name:'Feedback & feature requests',exact:true}).waitFor();
     await page.getByRole('button',{name:'Close',exact:true}).click();

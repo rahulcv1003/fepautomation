@@ -99,7 +99,7 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.2.1",
+    version: "1.2.2",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [{
       title: "Your payment template, ready.",
@@ -2350,7 +2350,7 @@
     nonFinanceBtn.dataset.description = "Create a PO without financing";
     customFieldsBtn.dataset.description = "Your fields. Your values.";
     reportBugBtn.dataset.description = "Help shape what comes next";
-    settingsBtn.dataset.description = "Your profile and activity";
+    settingsBtn.dataset.description = "Profile, custom fields, and feedback";
     [leadBtn, detailsBtn, nonFinanceBtn, customFieldsBtn, reportBugBtn, settingsBtn].forEach(button => button.setAttribute("aria-label", button.textContent));
     const paymentsBtn = document.createElement("button");
     paymentsBtn.type = "button";
@@ -2361,11 +2361,9 @@
     paymentsBtn.disabled = !canUseHardcodedApiEndpoints();
     paymentsBtn.addEventListener("click", () => { closePopup(); payAdvancePayment(); });
     mainView.appendChild(paymentsBtn);
-    mainView.appendChild(customFieldsBtn);
-    mainView.appendChild(reportBugBtn);
     mainView.appendChild(settingsBtn);
 
-    // ── Settings view: Stats + Mascot (tucked behind one button to keep the
+    // ── Settings view: Profile, custom fields, feedback, and stats (tucked behind one button to keep the
     // main popup to just the actions people use every run) ───────────────────
     const settingsView = document.createElement("div");
     settingsView.className = "fep-settings-view";
@@ -2460,6 +2458,8 @@
     }
 
     settingsView.appendChild(backBtn);
+    settingsView.appendChild(customFieldsBtn);
+    settingsView.appendChild(reportBugBtn);
     settingsView.appendChild(nameLabel);
     settingsView.appendChild(nameInput);
     settingsView.appendChild(statsLabel);
