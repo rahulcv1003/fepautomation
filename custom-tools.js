@@ -193,7 +193,7 @@
     node.addEventListener("click", async () => {
       node.disabled = true;
       try { await action(); } catch (error) { status(error.message, true); }
-      finally { node.disabled = false; }
+      finally { node.disabled = node.dataset.sent === "true"; }
     });
     return node;
   }
@@ -399,5 +399,5 @@
       status("Review and submit the report in the GitHub tab. It has not been submitted by the extension.");
     });
   }
-  globalThis.FepCustomTools=Object.freeze({manager,fillSaved,report,beginAutofill,beforeField,finishAutofill,endAutofill});
+  globalThis.FepCustomTools=Object.freeze({manager,fillSaved,report,beginAutofill,beforeField,finishAutofill,endAutofill,ui:Object.freeze({modal,el,input,select,button,status})});
 })();

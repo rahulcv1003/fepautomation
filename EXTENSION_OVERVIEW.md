@@ -211,3 +211,7 @@ Every "Fill Lead" and "Auto Fill Details" click is timed and recorded to `localS
 - **New injected action button:** follow the pattern in §7/§9 — check for a page-identifying element/URL, inject a button once (guard with `document.getElementById(id)` so it isn't duplicated on every DOM mutation), and hook up a handler.
 - **New direct-API action:** copy the pattern in §9 — guard with `canUseHardcodedApiEndpoints()`, branch UAT vs prod host, wrap the `fetch` in try/catch/finally, use `showApiToast()` for feedback.
 - Always test on **UAT** first; the direct-API buttons are disabled on localhost by design, so a browser with real UAT access is needed to exercise those paths.
+
+## Payment console (v1.2.0)
+
+`payment-tools.js` exposes the payment editor through the launcher and the existing advance-payment button. Imported cURL is parsed as data, never executed. `FEP_PAYMENT_REQUEST` in the background worker permits explicit selection among the four allowlisted API environments, with sender/payload/header validation, an in-flight duplicate guard, and status/text/timing responses. The legacy `FEP_ADVANCE_PAYMENT` message remains restricted to the sender’s own environment. Drafts and responses stay in content-script memory. Browser and worker tests use simulated responses only.

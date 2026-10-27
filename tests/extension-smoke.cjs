@@ -16,15 +16,15 @@ const vm=require('node:vm');
   const context=await browser.newContext();
   try{
     const page=await context.newPage();page.setDefaultTimeout(8000);
-    await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label>'}));
+    await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label><div><span>Project ID</span><span>1234567890</span></div><div id="paymentMethod"><div class="ant-card-body"><span>Advance amount: Rs. 15000</span></div></div>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.1.2'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.1.2'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.2.0'));
+      window.chrome={runtime:{getManifest:()=>({version:'1.2.0'})},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
     });
-    const inject=async()=>{await page.addStyleTag({path:path.join(root,'ui.css')});await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'content.js')});};
+    const inject=async()=>{await page.addStyleTag({path:path.join(root,'ui.css')});await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'payment-tools.js')});await page.addScriptTag({path:path.join(root,'content.js')});};
     await page.goto('https://uat-fep.freyrenergy.com/create-proposal/123');await inject();
     await page.locator('#fep-launcher').waitFor();
     await page.locator('#fep-launcher').focus();
@@ -54,6 +54,12 @@ const vm=require('node:vm');
     const bounds=await page.locator('#fep-popup').boundingBox();
     assert(bounds.x>=0 && bounds.x+bounds.width<=375,'Tool panel stays inside narrow viewport');
     await page.setViewportSize({width:1280,height:900});
+    await page.getByRole('button',{name:'Payments',exact:true}).click();
+    await page.getByRole('heading',{name:'Payments',exact:true}).waitFor();
+    assert.equal(await page.getByLabel('proposal_id',{exact:true}).inputValue(),'1234567890');
+    assert.equal(await page.getByLabel('details.paid_amount',{exact:true}).inputValue(),'15000');
+    await page.getByRole('button',{name:'Close',exact:true}).click();
+    await page.locator('#fep-launcher').click();
     await page.getByRole('button',{name:'Custom Field Builder',exact:true}).click();
     await page.getByRole('button',{name:'Pick a field on this page'}).click();
     await page.locator('input[name=contact]').click();
@@ -74,6 +80,10 @@ const vm=require('node:vm');
     await page.locator('#fep-launcher').click();
     await page.getByRole('button',{name:'Feedback & feature requests',exact:true}).click();
     await page.getByRole('heading',{name:'Feedback & feature requests',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Close',exact:true}).click();
+    await page.goto('https://uat-fep.freyrenergy.com/confirm-po/123');await inject();
+    await page.getByRole('button',{name:'Pay Advance Payment',exact:true}).click();
+    await page.getByRole('heading',{name:'Payments',exact:true}).waitFor();
     console.log('PASS: full content-script launcher integration, storage API integration, custom fill after reload, bug-report entry.');
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

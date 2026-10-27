@@ -99,11 +99,11 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.1.2",
+    version: "1.2.0",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [{
-      title: "A smaller footprint.",
-      items: ["A compact icon launcher and a smaller tool panel leave more room for your work.", "Drag the upper-left corner to resize the panel. Your preferred size is remembered."],
+      title: "Payments, without switching apps.",
+      items: ["Import a Postman cURL or start a payment request in the extension.", "Edit typed payload fields, review the environment and amounts, then send and inspect the response."],
       final: true
     }]
   };
@@ -2027,91 +2027,12 @@
 
   async function payAdvancePayment() {
     if (!canUseHardcodedApiEndpoints()) {
-      showApiToast("Direct API actions are disabled on localhost.", false);
+      showApiToast("Payments unavailable", false, "Open a supported FEP environment to send payment requests.");
       return;
     }
-
-    const btn = document.getElementById(BUTTON_IDS.payAdvance);
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "Processing…";
-    }
-
     try {
-      const projectId = getProjectId();
-      if (!projectId) {
-        showApiToast(
-          "Project ID not found. Navigate to the Project Details tab so the page loads it, then try again.",
-          false
-        );
-        return;
-      }
-
-      const advanceAmount = getAdvanceAmount();
-      if (!advanceAmount) {
-        showApiToast(
-          "Advance amount not found on this page. Make sure the Payment Method section is visible.",
-          false
-        );
-        return;
-      }
-
-      const endpoint = getApiEndpoint("/api/v1/zoho/proformainvoicedetailsfromzoho", true);
-
-      const fy = getFiscalYear();
-
-      const payload = {
-        proposal_id: projectId,
-        payment_stage: "Advance Invoice",
-        Estimate_ID: null,
-        Invoice_ID: `TEST/${fy}/${projectId}`,
-        estimate_status: null,
-        invoice_status: "paid",
-        action: { delete: false },
-        details: {
-          invoice_amount: advanceAmount,
-          paid_amount: advanceAmount,
-          due_amount: 0,
-          estimate_date: null,
-          invoice_date: "2024-10-15",
-          payment_link: "https://zohosecurepay.com/books/freyrenergy/secure?CInvoiceID=2-04503f3f3e28ffd03607fcbfbd3f1ed1899a136855339ee2573cfd27dcedf5176af324efdb0b412cd8941b209c61f14db69a47808aab99c24ffa905db4b66b916f318a5209e21896",
-          payment_link_id: null,
-          payment_type: null,
-          razorpay_payment_id: "3453545",
-          razorpay_order_id: "23563545",
-          transaction_id: "1234567fff"
-        }
-      };
-
-      console.log(LOG_PREFIX, "Pay Advance Payment → sending to", endpoint, payload);
-
-      // The background worker can use host permissions for cross-origin requests.
-      const res = await chrome.runtime.sendMessage({
-        type: "FEP_ADVANCE_PAYMENT",
-        endpoint,
-        body: JSON.stringify(payload)
-      });
-      if (!res || res.error) {
-        throw new Error(res?.error || "No response from the extension. Reload it and refresh this page.");
-      }
-      const data = res.data;
-
-      if (res.ok) {
-        showApiToast("Advance payment recorded", true, extractApiMessage(data));
-        console.log(LOG_PREFIX, "Pay Advance Payment — SUCCESS", res.status, data);
-      } else {
-        showApiToast("Advance payment failed", false, extractApiMessage(data) || `Status ${res.status}`);
-        console.log(LOG_PREFIX, "Pay Advance Payment — FAILED", res.status, data);
-      }
-    } catch (err) {
-      showApiToast("Advance payment error", false, err.message);
-      console.error(LOG_PREFIX, "Pay Advance Payment — ERROR", err);
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Pay Advance Payment";
-      }
-    }
+      globalThis.FepPaymentTools.open({ projectId: getProjectId(), amount: getAdvanceAmount(), fiscalYear: getFiscalYear() });
+    } catch (error) { showApiToast("Payments unavailable", false, error.message); }
   }
 
   function injectPayAdvanceButton() {
@@ -2431,6 +2352,15 @@
     reportBugBtn.dataset.description = "Help shape what comes next";
     settingsBtn.dataset.description = "Your profile and activity";
     [leadBtn, detailsBtn, nonFinanceBtn, customFieldsBtn, reportBugBtn, settingsBtn].forEach(button => button.setAttribute("aria-label", button.textContent));
+    const paymentsBtn = document.createElement("button");
+    paymentsBtn.type = "button";
+    paymentsBtn.className = "fep-tool-button";
+    paymentsBtn.textContent = "Payments";
+    paymentsBtn.setAttribute("aria-label", "Payments");
+    paymentsBtn.dataset.description = "Edit and send payment requests";
+    paymentsBtn.disabled = !canUseHardcodedApiEndpoints();
+    paymentsBtn.addEventListener("click", () => { closePopup(); payAdvancePayment(); });
+    mainView.appendChild(paymentsBtn);
     mainView.appendChild(customFieldsBtn);
     mainView.appendChild(reportBugBtn);
     mainView.appendChild(settingsBtn);

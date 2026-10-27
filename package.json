@@ -1,9 +1,9 @@
 {
   "name": "fep-master-autofill-suite",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
-    "test": "node tests/custom-tools.cjs && node tests/extension-smoke.cjs && node tests/numeric-fields.cjs && node tests/dropdown-fields.cjs && node tests/dependent-rules.cjs",
+    "test": "node tests/custom-tools.cjs && node tests/extension-smoke.cjs && node tests/numeric-fields.cjs && node tests/dropdown-fields.cjs && node tests/dependent-rules.cjs && node tests/payment-tools.cjs",
     "icons": "node generate-icons.cjs"
   },
   "devDependencies": {

@@ -23,12 +23,12 @@ function dropdown(id,label,options){return `<div class="ant-form-item"><div clas
    document.querySelector('[name=roof]').oninput=event=>events.push('roof:'+event.target.value);
    const rule=(id,value,type='text')=>({id,name:id,enabled:true,path:'/create-proposal/*',host:location.hostname,value,locator:{kind:type==='dropdown'?'data-testid':'name',value:id,type,count:1,occurrence:0}});
    window.savedRules=[rule('phase','3 Phase','dropdown'),rule('new-field','42'),rule('roof','123456')];
-   window.chrome={runtime:{getManifest:()=>({version:'1.1.2'})},storage:{local:{get:async(keys,callback)=>{const data={'fep-custom-fields-v1':savedRules,'fep-master-last-seen-version':'1.1.2'};callback?.(data);return data;},set:async()=>{}}}};
+   window.chrome={runtime:{getManifest:()=>({version:'1.2.0'})},storage:{local:{get:async(keys,callback)=>{const data={'fep-custom-fields-v1':savedRules,'fep-master-last-seen-version':'1.2.0'};callback?.(data);return data;},set:async()=>{}}}};
   });
   const root=path.resolve(__dirname,'..');
   await page.addStyleTag({path:path.join(root,'ui.css')});
   await page.addScriptTag({path:path.join(root,'custom-tools.js')});
-  await page.addScriptTag({path:path.join(root,'content.js')});
+  await page.addScriptTag({path:path.join(root,'payment-tools.js')});await page.addScriptTag({path:path.join(root,'content.js')});
   for(let run=0;run<2;run++){
    await page.locator('#fep-launcher').click();
    await page.getByRole('button',{name:'Auto Fill Details',exact:true}).click();
