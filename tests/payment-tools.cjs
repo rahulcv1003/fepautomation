@@ -61,7 +61,7 @@ async function backgroundChecks(){
   await page.goto('https://qa-fep.freyrenergy.com/test');
   await page.evaluate(()=>{
    window.calls=[];window.responseMode='ok';
-   window.chrome={runtime:{getManifest:()=>({version:'1.2.2'}),sendMessage:async request=>{calls.push(request);await new Promise(resolve=>setTimeout(resolve,150));if(responseMode==='network')return {error:'Failed to fetch'};return {ok:responseMode!=='http',status:responseMode==='http'?422:200,text:responseMode==='http'?'Invalid invoice':'{"success":true}',elapsedMs:150};}},storage:{local:{get:async()=>({}),set:async()=>{}}}};
+   window.chrome={runtime:{getManifest:()=>({version:'1.0.4'}),sendMessage:async request=>{calls.push(request);await new Promise(resolve=>setTimeout(resolve,150));if(responseMode==='network')return {error:'Failed to fetch'};return {ok:responseMode!=='http',status:responseMode==='http'?422:200,text:responseMode==='http'?'Invalid invoice':'{"success":true}',elapsedMs:150};}},storage:{local:{get:async()=>({}),set:async()=>{}}}};
   });
   await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'payment-tools.js')});
   await page.evaluate(()=>FepPaymentTools.open({projectId:'TEST-PROPOSAL',amount:500,fiscalYear:'26-27'}));

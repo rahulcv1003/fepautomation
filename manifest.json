@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FEP Master Autofill Suite",
-  "version": "1.2.2",
-  "description": "Chrome extension for autofilling Lead, Proposal, and PO forms in FEP environments.",
+  "version": "1.0.4",
+  "description": "Autofill FEP workflows, customize field values, and review payment API requests across supported environments.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -89,5 +89,6 @@
         "ui.css"
       ]
     }
-  ]
+  ],
+  "homepage_url": "https://github.com/rahulcv1003/fepautomation"
 }

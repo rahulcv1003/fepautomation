@@ -99,13 +99,14 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.2.2",
+    version: "1.0.4",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
-    pages: [{
-      title: "Your payment template, ready.",
-      items: ["The payment editor starts with your sample values. Update what you need, then review and send.", "Data types are handled automatically. Reset to sample restores the values without changing the environment."],
-      final: true
-    }]
+    pages: [
+      { title: "A smaller, cleaner workspace", items: ["A compact icon launcher replaces the mascot picker and comic buttons.", "Resize the tool panel from its upper-left corner. Your preferred size is remembered.", "Custom Field Builder and Feedback & feature requests now live under Settings."] },
+      { title: "Your values, at the right moment", items: ["Pick fields on a page and save the values you want to reuse.", "Saved rules replace defaults at each field’s turn, before dependent fields are filled.", "Dropdowns select the exact saved option; numeric fields recognize equivalent values such as 0123 and 123.", "Test, edit, enable, disable, or delete rules for a page and environment."] },
+      { title: "Payments without Postman", items: ["Import a Postman cURL or start from the prefilled sample payload.", "Edit values without choosing data types, then review the environment, amounts, and complete payload before sending.", "Use UAT, QA, staging, or production payment API endpoints; inspect the HTTP status and response, or export your edited cURL."] },
+      { title: "Feedback and fixes", items: ["Send bug reports, feature suggestions, and feedback through the GitHub form in Settings.", "Reports are assigned to Rahul. You review and submit them on GitHub.", "Improved dropdown selection, numeric verification, dependent-field ordering, and payment error handling."], final: true }
+    ]
   };
 
   let statsCache = null;

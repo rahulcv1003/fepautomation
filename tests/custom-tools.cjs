@@ -24,7 +24,7 @@ const fixture = `<!doctype html><html><body style="font-family:system-ui;padding
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:fixture}));
     await page.route('https://qa-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:fixture}));
     await page.addInitScript(() => {
-      globalThis.chrome={runtime:{getManifest:()=>({version:'1.2.2'})},storage:{local:{
+      globalThis.chrome={runtime:{getManifest:()=>({version:'1.0.4'})},storage:{local:{
         get:async key=>({[key]:JSON.parse(localStorage.getItem(key)||'[]')}),
         set:async data=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <rect width="1200" height="300" rx="20" fill="#222326"/>
+  <g transform="translate(64 72)" fill="none" stroke="#eceef0" stroke-width="3">
+    <rect width="25" height="25" rx="5"/><rect x="39" width="25" height="25" rx="5"/>
+    <rect y="39" width="25" height="25" rx="5"/><path d="M39 51.5h25M51.5 39v25" stroke-linecap="round"/>
+  </g>
+  <text x="164" y="96" fill="#fcfcfc" font-family="Segoe UI,Arial,sans-serif" font-size="36" font-weight="600" letter-spacing="-1">FEP Master Autofill Suite</text>
+  <text x="164" y="134" fill="#a9adb4" font-family="Segoe UI,Arial,sans-serif" font-size="18">Autofill. Custom fields. Payment testing.</text>
+  <path d="M64 194h1072" stroke="#43454b"/>
+  <text x="64" y="242" fill="#bfc3ca" font-family="Segoe UI,Arial,sans-serif" font-size="13" letter-spacing="2">CHROME EXTENSION</text>
+  <text x="1136" y="242" text-anchor="end" fill="#bfc3ca" font-family="Segoe UI,Arial,sans-serif" font-size="13" letter-spacing="2">VERSION 1.0.4</text>
+</svg>
