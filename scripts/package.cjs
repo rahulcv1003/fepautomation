@@ -13,7 +13,10 @@ const local=[],central=[];let offset=0;
 for(const name of [...files].sort()){
  const full=path.resolve(root,name);
  if(!full.startsWith(root+path.sep) || !fs.statSync(full).isFile())throw Error(`Invalid runtime path: ${name}`);
- const raw=fs.readFileSync(full),data=zlib.deflateRawSync(raw,{level:9}),filename=Buffer.from(name.replaceAll('\\','/'));
+ // Keep Windows and Linux release packages identical when checkout line endings differ.
+ const source=fs.readFileSync(full);
+ const raw=/\.(?:js|css|json)$/.test(name)?Buffer.from(source.toString('utf8').replace(/\r\n/g,'\n')):source;
+ const data=zlib.deflateRawSync(raw,{level:9}),filename=Buffer.from(name.replaceAll('\\','/'));
  const crc=crc32(raw),header=Buffer.alloc(30);
  header.writeUInt32LE(0x04034b50);header.writeUInt16LE(20,4);header.writeUInt16LE(0x800,6);header.writeUInt16LE(8,8);header.writeUInt16LE(33,12);
  header.writeUInt32LE(crc,14);header.writeUInt32LE(data.length,18);header.writeUInt32LE(raw.length,22);header.writeUInt16LE(filename.length,26);

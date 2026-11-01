@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FEP Master Autofill Suite",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Autofill FEP workflows, customize field values, and review payment API requests across supported environments.",
   "icons": {
     "16": "icons/icon16.png",
@@ -82,6 +82,8 @@
       "js": [
         "custom-tools.js",
         "payment-tools.js",
+        "request-defaults.js",
+        "request-tools.js",
         "content.js"
       ],
       "run_at": "document_end",

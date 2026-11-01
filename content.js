@@ -18,7 +18,8 @@
     payAdvance: "fep-pay-advance-btn",
     siteSurvey: "fep-site-survey-btn",
     preInstall: "fep-pre-install-btn",
-    postInstall:"fep-post-install-btn"
+    postInstall:"fep-post-install-btn",
+    qc:         "fep-qc-btn"
   };
 
   function isLocalDevHost() {
@@ -99,13 +100,13 @@
   // ships a change worth telling people about. Keep it to the current
   // release only; it's a highlight reel, not a full multi-version diff.
   const CHANGELOG = {
-    version: "1.0.4",
+    version: "1.0.5",
     reviewUrl: "https://chromewebstore.google.com/detail/fep-testing-helper/mannmcffpagagaebademcepjemfglida",
     pages: [
-      { title: "A smaller, cleaner workspace", items: ["A compact icon launcher replaces the mascot picker and comic buttons.", "Resize the tool panel from its upper-left corner. Your preferred size is remembered.", "Custom Field Builder and Feedback & feature requests now live under Settings."] },
-      { title: "Your values, at the right moment", items: ["Pick fields on a page and save the values you want to reuse.", "Saved rules replace defaults at each field’s turn, before dependent fields are filled.", "Dropdowns select the exact saved option; numeric fields recognize equivalent values such as 0123 and 123.", "Test, edit, enable, disable, or delete rules for a page and environment."] },
-      { title: "Payments without Postman", items: ["Import a Postman cURL or start from the prefilled sample payload.", "Edit values without choosing data types, then review the environment, amounts, and complete payload before sending.", "Use UAT, QA, staging, or production payment API endpoints; inspect the HTTP status and response, or export your edited cURL."] },
-      { title: "Feedback and fixes", items: ["Send bug reports, feature suggestions, and feedback through the GitHub form in Settings.", "Reports are assigned to Rahul. You review and submit them on GitHub.", "Improved dropdown selection, numeric verification, dependent-field ordering, and payment error handling."], final: true }
+      { title: "One-click advance payments", items: ["Pay Advance Payment now sends directly using the current project ID and advance amount.", "Open Settings → Payments to edit requests manually or save values for future payments."] },
+      { title: "Other cURLS", items: ["Edit payment, survey, installation, and QC requests under Settings → Other cURLS.", "Save for future runs updates your configuration. Review & send now sends once without saving your edits.", "Review the environment and payload, enter missing page values, and see the response here."] },
+      { title: "Updated installation forms", items: ["Fill QC Form is available beside the Pre and Post Installation buttons.", "Pre and Post Installation use the updated payloads and the correct FEP API for each environment.", "Project IDs and system size follow the current page. Saved custom configurations still take priority."] },
+      { title: "Workspace fixes", items: ["Non Finance is highlighted on Generate PO pages; Fill Lead stays neutral there.", "Cleaner request screens fit smaller displays.", "Find Crumble below Settings. Occasional suggestions can be turned off."], final: true }
     ]
   };
 
@@ -1942,22 +1943,10 @@
   function getAdvanceAmount() {
     const card = document.getElementById("paymentMethod");
     const scope = card || document;
-
-    // Walk every element in scope; the h3/span containing "Rs. XXXXX" is
-    // a sibling of the "Advance amount:" label — scan broadly.
-    for (const el of scope.querySelectorAll("*")) {
-      const match = el.textContent.match(/rs\.?\s*([\d,]+)/i);
-      if (match) {
-        // Make sure this element is actually inside the payment method area
-        // by checking its text also mentions "advance" somewhere in its subtree.
-        const parent = el.closest
-          ? el.closest("#paymentMethod, [id*='payment']") || el
-          : el;
-        if (normalize(parent.textContent).includes("advance")) {
-          const num = parseInt(match[1].replace(/,/g, ""), 10);
-          if (!isNaN(num) && num > 0) return num;
-        }
-      }
+    const match = scope.textContent.match(/advance(?:\s+payment)?\s+amount\s*:?\s*(?:rs\.?|₹|inr)?\s*([\d,]+(?:\.\d+)?)/i);
+    if (match) {
+      const amount = Number(match[1].replace(/,/g,""));
+      if (Number.isFinite(amount) && amount > 0) return amount;
     }
     return null;
   }
@@ -2026,14 +2015,29 @@
     }, 5000);
   }
 
+  let advancePaymentInFlight = false;
   async function payAdvancePayment() {
-    if (!canUseHardcodedApiEndpoints()) {
-      showApiToast("Payments unavailable", false, "Open a supported FEP environment to send payment requests.");
-      return;
-    }
+    if (advancePaymentInFlight) return;
+    const btn = document.getElementById(BUTTON_IDS.payAdvance);
     try {
-      globalThis.FepPaymentTools.open({ projectId: getProjectId(), amount: getAdvanceAmount(), fiscalYear: getFiscalYear() });
-    } catch (error) { showApiToast("Payments unavailable", false, error.message); }
+      if (!canUseHardcodedApiEndpoints()) throw new Error("Open a supported FEP environment.");
+      const projectId = getProjectId() || getNumericProjectId();
+      const amount = getAdvanceAmount();
+      if (!projectId) throw new Error("Could not find the Project ID on this page.");
+      if (!amount) throw new Error("Could not find the advance amount on this page.");
+      advancePaymentInFlight = true;
+      if (btn) { btn.disabled = true; btn.textContent = "Processing…"; }
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+      const request = await FepRequestTools.resolve("advance", {projectId:String(projectId), amount, fiscalYear:getFiscalYear(), today});
+      FepPaymentTools.core.validate(request.payload);
+      const response = await chrome.runtime.sendMessage({type:"FEP_ADVANCE_PAYMENT", endpoint:getApiEndpoint("/api/v1/zoho/proformainvoicedetailsfromzoho", true), body:JSON.stringify(request.payload), headers:request.headers});
+      if (response?.error) throw new Error(response.error + " Check the payment record before trying again.");
+      if (!response) throw new Error("No response received. Check the payment record before trying again.");
+      const success = response.ok && !response.data?.errors && !response.data?.error && response.data?.success !== false;
+      showApiToast(success ? "Advance payment submitted" : "Advance payment failed", success, extractApiMessage(response.data) || `Status ${response.status}`);
+    } catch (error) { showApiToast("Advance payment error", false, error.message); }
+    finally { advancePaymentInFlight = false; if (btn) {btn.disabled=false;btn.textContent="Pay Advance Payment";} }
   }
 
   function injectPayAdvanceButton() {
@@ -2360,9 +2364,24 @@
     paymentsBtn.setAttribute("aria-label", "Payments");
     paymentsBtn.dataset.description = "Edit and send payment requests";
     paymentsBtn.disabled = !canUseHardcodedApiEndpoints();
-    paymentsBtn.addEventListener("click", () => { closePopup(); payAdvancePayment(); });
-    mainView.appendChild(paymentsBtn);
+    paymentsBtn.addEventListener("click", () => { closePopup(); globalThis.FepPaymentTools.open({projectId:getProjectId()}); });
+
     mainView.appendChild(settingsBtn);
+    const crumbleLink = document.createElement("a");
+    crumbleLink.className = "fep-crumble-link";
+    crumbleLink.href = FepRequestTools.crumbleUrl;
+    crumbleLink.target = "_blank";
+    crumbleLink.rel = "noopener noreferrer";
+    crumbleLink.setAttribute("aria-label", "Check out Crumble");
+    const crumbleLabel = document.createElement("span");
+    crumbleLabel.className = "fep-crumble-eyebrow";
+    crumbleLabel.textContent = "ALSO BY RAHUL";
+    const crumbleName = document.createElement("strong");
+    crumbleName.textContent = "Crumble ↗";
+    const crumbleDescription = document.createElement("span");
+    crumbleDescription.textContent = "Auto-delete cookies. Keep browsing clean.";
+    crumbleLink.append(crumbleLabel, crumbleName, crumbleDescription);
+    mainView.appendChild(crumbleLink);
 
     // ── Settings view: Profile, custom fields, feedback, and stats (tucked behind one button to keep the
     // main popup to just the actions people use every run) ───────────────────
@@ -2459,6 +2478,13 @@
     }
 
     settingsView.appendChild(backBtn);
+    settingsView.appendChild(paymentsBtn);
+    const requestsBtn = document.createElement("button");
+    requestsBtn.type="button";
+    requestsBtn.className="fep-tool-button";
+    requestsBtn.textContent="Other cURLS";
+    requestsBtn.addEventListener("click",()=>{closePopup();FepRequestTools.open();});
+    settingsView.appendChild(requestsBtn);
     settingsView.appendChild(customFieldsBtn);
     settingsView.appendChild(reportBugBtn);
     settingsView.appendChild(nameLabel);
@@ -2595,6 +2621,7 @@
     }
 
     function openPopup() {
+      globalThis.FepRequestTools?.maybePromote().catch(console.error);
       const fn = getDetailsFn();
       detailsBtn.disabled        = !fn;
       detailsBtn.style.opacity   = fn ? "1" : "0.4";
@@ -2604,12 +2631,15 @@
       detailsBtn.setAttribute("aria-label", detailsBtn.textContent);
 
       const leadReady = isLeadFormOpen();
+      const isGeneratePO = location.pathname.includes("generate-po");
+      leadBtn.dataset.primary = String(leadReady && !isGeneratePO);
+      nonFinanceBtn.dataset.primary = String(isGeneratePO);
       leadBtn.disabled      = !leadReady;
       leadBtn.style.opacity = leadReady ? "1" : "0.4";
       leadBtn.style.cursor  = leadReady ? "pointer" : "not-allowed";
       leadBtn.title         = leadReady ? "" : "Open the Add Lead form first";
 
-      nonFinanceBtn.style.display = location.href.includes("generate-po") ? "block" : "none";
+      nonFinanceBtn.style.display = isGeneratePO ? "block" : "none";
       showMainView();
       applyPanelSize();
       popup.style.display = "flex";
@@ -2727,7 +2757,7 @@
     for (const item of items) {
       const label   = item.querySelector(".ant-descriptions-item-label");
       const content = item.querySelector(".ant-descriptions-item-content");
-      const labelText = normalize(label.textContent).replace(":", "").trim();
+      const labelText = normalize(label?.textContent || "").replace(":", "").trim();
       if ((labelText === "size" || labelText === "system size") && content) {
         const match = content.textContent.match(/([\d.]+)\s*kw/i);
         if (match) return parseFloat(match[1]);
@@ -2786,108 +2816,17 @@
 
       const { latitude, longitude } = getRandomIndianCoordinates();
 
-      const payload = {
-        query: `mutation ($project: String!, $surveyDetails: JSON, $stage: Int, $roofDetailsData: [JSON], $electricityDetails: JSON, $media: JSON) {
-      saveSurvey (project: $project, surveyDetails: $surveyDetails, stage: $stage, roofDetailsData: $roofDetailsData, electricityDetails: $electricityDetails, media: $media) {
-    message
-  }
-    }`,
-        variables: {
-          project: projectId,
-          surveyDetails: {
-            dateOfSurvey: "2025-06-17",
-            siteSurveyBy: "699c1a3c197c74dadc556b36",
-            surveyMobileNumber: "6546565655",
-            surveyName: "test site eng",
-            surveyEmail: "testtilicho_se@tilicho.in",
-            customerName: "Testing sridhar warr 06-07-2026",
-            projectSize: { projectSize: projectSize },
-            customerMobileNumber: "7997714333",
-            customerEmail: "csssrh@freyr.in",
-            customerAddress: "Boduvalasa, Visakhapatanam, Anakapalle Division, Andhra Pradesh",
-            latitude: latitude,
-            longitude: longitude
-          },
-          stage: 4,
-          roofDetailsData: [
-            {
-              roofDetails: "RCC",
-              accessToRoofRCC: "Yes",
-              isDrillingUpto2InchesAllowedRCC: "Yes",
-              slabThicknessRCC: { slabThicknessRCC: 11 },
-              parapetWallWidthRCC: { parapetWallWidthRCC: 1 },
-              parapetWallheightRCC: { parapetWallheightRCC: 1 },
-              isWaterProofileAvailableOnRoofSlabRCC: "Yes",
-              metionTheAdjustableOrRemobaleObjectsForInstallationRCC: "11",
-              additionalInformationRCC: "11",
-              dimensionForEachRoofRCC: [
-                { areaName: "11", length: { reading1: 11 }, height: { reading3: 11 }, width: { reading2: 8 } }
-              ],
-              ageOfTheBuildingRCC: { ageOfTheBuildingRCC: 11 },
-              areThereAnyPreExistingWaterLeakagesFromTheRoofRCC: "11",
-              distanceOfWaterSourceFromRoofRCC: { distanceOfWaterSourceFromRoofRCC: 11 },
-              waterSourceOnRoofRCC: "Yes",
-              motorAvailabilityRCC: "Yes"
-            }
-          ],
-          electricityDetails: {
-            contractLoadLessThan20: { contractLoadLessThan20: 11 },
-            acCountLessThan20: { acCountLessThan20: 11 },
-            geyserCountLessThan20: { geyserCountLessThan20: 11 },
-            transformerCapacityLessThan20: { transformerCapacityLessThan20: 11 },
-            cableLengthBetweenInterverterAndTerminationPointLessThan20: { cableLengthBetweenInterverterAndTerminationPointLessThan20: 10 },
-            cableLengthBetweenSolarModuleAndInterverterLessThan20: { cableLengthBetweenSolarModuleAndInterverterLessThan20: 11 },
-            cableLengthBetweenInverterAndEarthingAreaLessThan20: { cableLengthBetweenInverterAndEarthingAreaLessThan20: 11 },
-            cableLengthBetweenSolarModuleAndEarthingAreaLessThan20: { cableLengthBetweenSolarModuleAndEarthingAreaLessThan20: 11 },
-            cableLengthBetweenPowerSocketAndMotorLessThan20: { cableLengthBetweenPowerSocketAndMotorLessThan20: 11 },
-            typeOFAreaForEarthingLessThan20: "Loose soil",
-            doestheClientHasAnLTPanelLessThan20: [
-              {
-                doestheClientHasAnLTPanelLessThan20: "YES",
-                lengthOfLTPanelLessThan20: { lengthOfLTPanelLessThan20: 11 },
-                widthOfLTPanelLessThan20: { widthOfLTPanelLessThan20: 11 },
-                heightOfLTPanelLessThan20: { heightOfLTPanelLessThan20: 7 }
-              }
-            ],
-            powerSocketInBetweenLTPanelAndSolarLocationLessThan20: "Yes",
-            doesTheWifiHasFullStrengthNearTheLTPanelLessThan20: "Yes",
-            nameOfBroadbandProviderLessThan20: "11",
-            mcbRatingLessThan20: { mcbRatingLessThan20: 11 },
-            wifiAvailabilityLessThan20: "Yes",
-            wifiServiceProviderLessThan20: "Jio",
-            wifiFrequencyBandLessThan20: "5Ghz Only",
-            routerImageLessThan20: [
-              {
-                name: "Screenshot 2025-06-17 at 3.02.23 PM.png",
-                type: "image/png",
-                content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/e155ca22-5928-4ffb-8219-e4575688fdb8_Screenshot-2025-06-17-at-3.02.23-PM1750152745653.png"
-              }
-            ]
-          },
-          media: {
-            entireRoofLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.34 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/2aef6589-be6d-471d-bcbd-e11a855475c7_Screenshot-2025-06-17-at-3.02.34-PM1750152755451.png" }],
-            mapMarkingLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.39 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/6caa7b57-e7a9-4b90-9b28-dd61b9e0e24a_Screenshot-2025-06-17-at-3.02.39-PM1750152760245.png" }],
-            meterPhotoLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.41 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/627db4df-7bd9-4e9b-a343-99ee4e7eec23_Screenshot-2025-06-17-at-3.02.41-PM1750152762307.png" }],
-            handSketchLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.43 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/78c0b01b-ef72-4194-a9f1-8bdba79631bd_Screenshot-2025-06-17-at-3.02.43-PM1750152764630.png" }],
-            powerBillLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.46 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/0dd846af-f162-4fa4-a3fa-b88ecf36b207_Screenshot-2025-06-17-at-3.02.46-PM1750152767134.png" }],
-            inverterMountingLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.48 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/12998292-740a-4077-b04b-0e7329c87d84_Screenshot-2025-06-17-at-3.02.48-PM1750152769323.png" }],
-            earthingAreaLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.50 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/081725b2-aad2-4b11-ada0-6e34212e63c3_Screenshot-2025-06-17-at-3.02.50-PM1750152771788.png" }],
-            lthtPanelNameplateLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.53 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/254bfba2-2b12-4d1b-be23-acd95012d12b_Screenshot-2025-06-17-at-3.02.53-PM1750152774024.png" }],
-            designatedMaterialDeliveryAreaImageLessThan20: [{ name: "Screenshot 2025-06-17 at 3.02.53 PM.png", type: "image/png", content: "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/survey/254bfba2-2b12-4d1b-be23-acd95012d12b_Screenshot-2025-06-17-at-3.02.53-PM1750152774024.png" }],
-            designatedMaterialDeliveryAreaVideoLessThan20: [{ name: "6f247569-f958-4331-8682-6db340204ae5-100029566417792021198641783277877766.mp4", type: "video/mp4", content: "https://freyr-energy-media-prod.s3.ap-south-1.amazonaws.com/survey/f403ff71-d0f6-42e3-b032-54fb09371232_10005045571783257192417.mp4" }]
-          }
-        }
-      };
+      const request = await FepRequestTools.resolve("survey", {projectId, projectSize, latitude, longitude});
+      const payload = request.payload;
 
       console.log(LOG_PREFIX, "Fill Site Survey → sending to", endpoint, "project:", projectId, "size:", projectSize, "coords:", latitude, longitude);
 
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "accept": "*/*",
-          "content-type": "application/json"
-        },
-        body: JSON.stringify(payload)
+        headers: {"accept":"*/*", "content-type":"application/json", ...request.headers},
+        body: JSON.stringify(payload),
+        redirect: "error",
+        signal: AbortSignal.timeout(30000)
       });
 
       let data;
@@ -2977,62 +2916,19 @@
       if (!uniqueId)   { showApiToast("Could not find numeric Project ID on this page.", false); return; }
       if (!systemSize) { showApiToast("Could not find System Size on this page.", false); return; }
 
-      const endpoint = getApiEndpoint("/api/v1/graphql");
+      const endpoint = getApiEndpoint("/api/v1/graphql", true);
 
-      const payload = {
-        query: `mutation ($input: savePreInstallationFormInput) {
-      savePreInstallationForm (input: $input) {
-    message
-  }
-    }`,
-        variables: {
-          input: {
-            project: projectId,
-            projectDetails: {
-              uniqueId: uniqueId,
-              projectName: "test sridhar T3_residential_independent",
-              freyrSiteEngineerName: "test site eng",
-              systemCapacity: systemSize,
-              freyrSiteEngineer: "67ca958234a956e0d98304e3",
-              dateOfFormSubmission: "2025-08-14",
-              phoneNumberOfClient: "9854623656",
-              startDateofInstallation: "2025-08-14"
-            },
-            ppeAcknowledgedAt: 1783658968000,
-            customerDetails: {
-              nameofClientOnSite: "test tilicho T3",
-              phoneNumberOfClient: "9854623656",
-              vendorCompanyName: null,
-              VendorFirstName: null,
-              VendorLastName: null,
-              vendorMobileNumber: null,
-              vendorEmailId: null,
-              preInstallationChecklist: {
-                siteIsShadowFree: "Yes",
-                siteIsAsPerDPR: "Yes",
-                allMaterialReceivedAsPerBOM: "Yes"
-              }
-            },
-            media: {
-              installationCrewPhoto: [{ name: "Screenshot 2025-05-13 012934.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/b7bc1428-8661-4bcc-aa1f-832292f9344e_Screenshot-2025-05-13-0129341755166762522.png" }],
-              preInstallationSiteVideo: [{ name: "Screen Recording 2025-05-13 174423.mp4", type: "video/mp4", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/de536fc1-6d46-4c54-a2d6-782a53b96191_Screen-Recording-2025-05-13-1744231755166766624.mp4" }],
-              completeMaterialVideo: [{ name: "Screen Recording 2025-05-13 174423.mp4", type: "video/mp4", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/1e527f7a-4116-4f5d-832c-23c98f3ce962_Screen-Recording-2025-05-13-1744231755166769169.mp4" }],
-              ModulesPhotos1: [{ name: "Screenshot 2025-05-13 002140.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/fb22793e-cf9e-4139-b344-c80d4853e063_Screenshot-2025-05-13-0021401755166773842.png" }],
-              ModulesPhotos2: [{ name: "Screenshot 2025-05-13 002140.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/6b93fcbf-7c68-4141-86c4-2f6e113bbcaa_Screenshot-2025-05-13-0021401755166776674.png" }],
-              inverter: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/591e3643-94ef-41dd-8a54-d1aade87c012_Screenshot-2025-05-13-1812191755166785545.png" }],
-              geoTaggedSitePhoto: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-pre-installation/591e3643-94ef-41dd-8a54-d1aade87c012_Screenshot-2025-05-13-1812191755166785545.png" }]
-            },
-            isLastPage: true
-          }
-        }
-      };
+      const request = await FepRequestTools.resolve("preInstall", {projectId, uniqueId, systemSize});
+      const payload = request.payload;
 
       console.log(LOG_PREFIX, "Pre-Install Form → sending to", endpoint, "project:", projectId, "uniqueId:", uniqueId, "size:", systemSize);
 
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "accept": "*/*", "content-type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: {"accept":"*/*", "content-type":"application/json", ...request.headers},
+        body: JSON.stringify(payload),
+        redirect: "error",
+        signal: AbortSignal.timeout(30000)
       });
 
       let data;
@@ -3071,72 +2967,19 @@
       if (!uniqueId)   { showApiToast("Could not find numeric Project ID on this page.", false); return; }
       if (!systemSize) { showApiToast("Could not find System Size on this page.", false); return; }
 
-      const endpoint = getApiEndpoint("/api/v1/graphql");
+      const endpoint = getApiEndpoint("/api/v1/graphql", true);
 
-      const payload = {
-        query: `mutation ($input: savePostInstallationFormInput) {
- savePostInstallationForm (input: $input) {
- message
- }
- }`,
-        variables: {
-          input: {
-            project: projectId,
-            isLastPage: true,
-            projectDetails: {
-              uniqueId: uniqueId,
-              projectName: "test Sridhar_residential_society",
-              systemCapacity: systemSize,
-              freyrSiteEngineer: "67ca958234a956e0d98304e3",
-              freyrSiteEngineerName: "test site eng",
-              vendorCompanyName: null,
-              vendorMobileNumber: null,
-              vendorEmailId: null,
-              firstName: "test",
-              lastName: "site eng"
-            },
-            media: {
-              videoOfAnchorFastnersDrillingAndChemicalFilling: [{ name: "Screen Recording 2025-05-13 174423.mp4", type: "video/mp4", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/e3296189-c039-45cf-b297-4b347f82a6d4_Screen-Recording-2025-05-13-1744231755167021642.mp4" }],
-              structureInstallationPhoto: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/ea09e0e3-adb1-45e5-8ec9-90f04ce85184_Screenshot-2025-05-13-1812191755167030134.png" }],
-              moduleInstalliationPhoto: [{ name: "Screenshot 2025-05-06 123749.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/84881a2e-3342-49e8-882d-e64ffdeb120f_Screenshot-2025-05-06-1237491755167033610.png" }],
-              inverterTestReport: [{ name: "Screenshot 2025-05-13 002140.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/5d7e77b5-2268-4265-b18d-a3f975aa5eac_Screenshot-2025-05-13-0021401755167037004.png" }],
-              postInstallationInverterOrACDBOrDCDBPhoto: [{ name: "Screenshot 2025-05-13 002140.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/3aad1266-5d4f-4df5-a3a6-4676a6d2d652_Screenshot-2025-05-13-0021401755167040167.png" }],
-              inverterAndDataLoggerSNoPhoto: [{ name: "Screenshot 2025-05-13 002140.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/19199538-bb42-47ba-9b45-717cc3336564_Screenshot-2025-05-13-0021401755167043162.png" }],
-              earthPitInstallationVideo: [{ name: "Screen Recording 2025-05-13 174423.mp4", type: "video/mp4", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/b7fbd5d8-abd6-48b2-983c-c34663761b33_Screen-Recording-2025-05-13-1744231755167057818.mp4" }],
-              postInstallationEarthPitsPhotos: [{ name: "Screenshot 2025-05-13 145703.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/036d6d78-d36b-468e-a0a5-7060b67aea13_Screenshot-2025-05-13-1457031755167050486.png" }],
-              civilFoundationOrWorkPhotos: [{ name: "Screenshot 2025-05-13 002140.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/1e3938cc-2bbd-4808-b639-91597a63e47d_Screenshot-2025-05-13-0021401755167046906.png" }],
-              acCableTerminationAtClientsPanelOrMeter: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/fdb920af-d41a-41d8-9df7-4eedf3588fc4_Screenshot-2025-05-13-1812191755167066059.png" }],
-              postInstallationFullSiteVideo: [{ name: "Screen Recording 2025-05-13 174423.mp4", type: "video/mp4", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/638d0a84-3973-4670-86e7-dff733ed4619_Screen-Recording-2025-05-13-1744231755167071510.mp4" }],
-              installationCrewPhotoWithSystem: [{ name: "Screenshot 2025-05-13 180724.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/86ba8d52-0d0c-4165-9b09-3076c4567b75_Screenshot-2025-05-13-1807241755167080374.png" }],
-              beneficiaryPhotoAlongWithCompleteModuleSetUp: [{ name: "Screenshot 2025-05-13 180724.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/26cbc502-b0bd-4403-bc5c-dc2b0f1d9c1a_Screenshot-2025-05-13-1807241755167083372.png" }],
-              beneficiaryPhotoAlongWithCompleteInverterSetUp: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/e951b98f-0002-4844-acb1-70b8428d8267_Screenshot-2025-05-13-1812191755167086550.png" }],
-              postInstallationCeilingPhoto: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/e951b98f-0002-4844-acb1-70b8428d8267_Screenshot-2025-05-13-1812191755167086550.png" }],
-              structureAreaCleanupPhoto: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/e951b98f-0002-4844-acb1-70b8428d8267_Screenshot-2025-05-13-1812191755167086550.png" }],
-              roofCleanupPhoto: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/e951b98f-0002-4844-acb1-70b8428d8267_Screenshot-2025-05-13-1812191755167086550.png" }],
-              materialStorageAreaCleanupPhoto: [{ name: "Screenshot 2025-05-13 181219.png", type: "image/png", content: "https://freyr-energy-media-qa.s3.ap-south-1.amazonaws.com/se-post-installation/e951b98f-0002-4844-acb1-70b8428d8267_Screenshot-2025-05-13-1812191755167086550.png" }]
-            },
-            customerDetails: {
-              nameofClientOnSite: "test tilicho T3",
-              phoneNumberOfClient: "9854623656",
-              clientCooperationonSite: 5,
-              dateOfFormSubmission: "2025-08-14",
-              endDateOfInstallation: "2025-08-14",
-              rmsUsername: "12",
-              rmsPassword: "12",
-              rmsSetupViaWifiOrMobileHotspot: "Wifi",
-              freyrEnergyEngineersAssistance: 5,
-              overallInstallationExperience: 5
-            }
-          }
-        }
-      };
+      const request = await FepRequestTools.resolve("postInstall", {projectId, uniqueId, systemSize});
+      const payload = request.payload;
 
       console.log(LOG_PREFIX, "Post-Install Form → sending to", endpoint, "project:", projectId, "uniqueId:", uniqueId, "size:", systemSize);
 
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "accept": "*/*", "content-type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: {"accept":"*/*", "content-type":"application/json", ...request.headers},
+        body: JSON.stringify(payload),
+        redirect: "error",
+        signal: AbortSignal.timeout(30000)
       });
 
       let data;
@@ -3157,6 +3000,41 @@
     }
   }
 
+  let qcRequestInFlight = false;
+  async function fillQcForm() {
+    if (qcRequestInFlight) return;
+    if (!canUseHardcodedApiEndpoints()) {
+      showApiToast("QC form unavailable", false, "Open a supported FEP environment.");
+      return;
+    }
+    const btn = document.getElementById(BUTTON_IDS.qc);
+    qcRequestInFlight = true;
+    if (btn) { btn.disabled = true; btn.textContent = "Processing…"; }
+    try {
+      const projectId = getProjectIdFromUrl();
+      const uniqueId = getNumericProjectId();
+      if (!projectId) throw new Error("Could not extract project ID from URL.");
+      if (!uniqueId) throw new Error("Could not find numeric Project ID on this page.");
+      const request = await FepRequestTools.resolve("qc", {projectId, uniqueId});
+      const res = await fetch(getApiEndpoint("/api/v1/graphql", true), {
+        method: "POST",
+        headers: {"accept":"*/*", "content-type":"application/json", ...request.headers},
+        body: JSON.stringify(request.payload),
+        redirect: "error",
+        signal: AbortSignal.timeout(30000)
+      });
+      let data;
+      try { data = await res.json(); } catch (_) { throw new Error(`Unexpected response (HTTP ${res.status}). Check the QC record before trying again.`); }
+      const success = res.ok && !data.errors && !data.error && data.success !== false;
+      showApiToast(success ? "QC form submitted" : "QC form failed", success, extractApiMessage(data) || `Status ${res.status}`);
+    } catch (error) {
+      showApiToast("QC form error", false, error.message);
+    } finally {
+      qcRequestInFlight = false;
+      if (btn) { btn.disabled = false; btn.textContent = "Fill QC Form"; }
+    }
+  }
+
   function injectInstallationButtons() {
     if (!canUseHardcodedApiEndpoints()) return;
     if (!location.pathname.includes("project-tracker")) return;
@@ -3164,7 +3042,8 @@
 
     const alreadyDone =
       document.getElementById(BUTTON_IDS.preInstall) &&
-      document.getElementById(BUTTON_IDS.postInstall);
+      document.getElementById(BUTTON_IDS.postInstall) &&
+      document.getElementById(BUTTON_IDS.qc);
     if (alreadyDone) return;
 
     // Only show when status tag text is exactly "Installation"
@@ -3186,10 +3065,15 @@
 
     const preBtn  = makeBtn(BUTTON_IDS.preInstall,  "Fill Pre Installation Form",  "#ea580c", fillPreInstallForm);
     const postBtn = makeBtn(BUTTON_IDS.postInstall, "Fill Post Installation Form", "#059669", fillPostInstallForm);
+    const qcBtn = makeBtn(BUTTON_IDS.qc, "Fill QC Form", "#242528", fillQcForm);
 
-    // Insert both buttons after the Installation tag
-    if (postBtn) installTag.insertAdjacentElement("afterend", postBtn);
-    if (preBtn)  installTag.insertAdjacentElement("afterend", preBtn);
+    // Keep a stable order, including when a button is reinserted after a page update.
+    let anchor = installTag;
+    for (const [id, fresh] of [[BUTTON_IDS.preInstall,preBtn],[BUTTON_IDS.postInstall,postBtn],[BUTTON_IDS.qc,qcBtn]]) {
+      const button = fresh || document.getElementById(id);
+      if (fresh) anchor.insertAdjacentElement("afterend", fresh);
+      anchor = button || anchor;
+    }
   }
 
   function createButtons() {
@@ -3278,5 +3162,12 @@
     });
   }
 
+  FepRequestTools.configure({
+    getEndpoint:key=>getApiEndpoint(key==='advance'?"/api/v1/zoho/proformainvoicedetailsfromzoho":"/api/v1/graphql",key!=='survey'),
+    getContext:key=>{
+      const now=new Date(), size=getProjectSizeKw();
+      return {projectId:key==='advance'?(getProjectId() || getNumericProjectId()):getProjectIdFromUrl(),uniqueId:getNumericProjectId(),systemSize:size,projectSize:size,amount:getAdvanceAmount(),fiscalYear:getFiscalYear(),today:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`,...getRandomIndianCoordinates()};
+    }
+  });
   start();
 })();

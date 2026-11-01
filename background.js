@@ -1,5 +1,5 @@
 // Payment requests run here so extension host permissions, rather than page CORS,
-// govern access. Only the payment endpoint for the sender's environment is allowed.
+// govern access. One-click payments follow the page; the editor can select a supported environment.
 const PAYMENT_HOSTS = Object.freeze({
   "fep.freyrenergy.com": "fep-api.freyrenergy.com",
   "uat-fep.freyrenergy.com": "uat-fep-api.freyrenergy.com",

@@ -56,7 +56,7 @@
     for(const key of ["invoice_amount","paid_amount","due_amount"]){if(typeof payload.details[key]!=="number" || !Number.isFinite(payload.details[key]) || payload.details[key]<0)throw new Error(`details.${key} must be a number of zero or more.`);}
     return payload;
   }
-  function importCurl(command) {
+  function importCurl(command, options = {}) {
     const parts=tokens(command.trim());if(parts.shift()?.toLowerCase()!=="curl")throw new Error("Paste a Postman cURL command beginning with curl.");
     let url,body,method="POST";const headers={};
     const take=()=>{if(!parts.length)throw new Error("The cURL is missing an option value.");return parts.shift();};
@@ -69,6 +69,8 @@
       if(["--header","-H"].includes(part)){
         const header=take(), colon=header.indexOf(':');if(colon<1)throw new Error("Invalid cURL header.");
         const key=header.slice(0,colon).trim().toLowerCase(),value=header.slice(colon+1).trim();
+        // Browser cURL exports include transport headers that fetch manages itself.
+        if(options.template && (["accept-language","origin","priority","referer","user-agent"].includes(key) || key.startsWith("sec-")))continue;
         if(!["content-type","accept","authorization","x-api-key"].includes(key))throw new Error(`Unsupported header: ${key}. Supported headers: Content-Type, Accept, Authorization, X-API-Key.`);
         if(/[\r\n]/.test(value))throw new Error("Invalid header value.");headers[key]=value;continue;
       }
@@ -80,7 +82,7 @@
     if(!url || body===undefined)throw new Error("The cURL must include a payment endpoint and a JSON body.");
     if(headers['content-type'] && !/^application\/json(?:\s*;.*)?$/i.test(headers['content-type']))throw new Error("Payments require Content-Type: application/json.");
     delete headers['content-type'];
-    return {environment:environmentFor(url),payload:validate(parseJson(body)),headers};
+    return options.template ? {url,payload:parseJson(body),headers} : {environment:environmentFor(url),payload:validate(parseJson(body)),headers};
   }
   function makeCurl(request) {
     const quote=value=>"'"+value.replace(/'/g,"'\"'\"'")+"'";
@@ -168,6 +170,7 @@
     const exportText=input('Exported cURL',exported,'','textarea');exportText.readOnly=true;
     const actions=el('div',undefined,body);actions.className='actions';
     button('Review payment request',actions,()=>{draft=read();review();});
+    if(globalThis.FepRequestTools)button('Save for Pay Advance Payment',actions,async()=>{draft=read();await FepRequestTools.savePayment(draft);status('Saved for Pay Advance Payment. Project IDs follow the current page; other saved values are kept.');},true);
     button('Show cURL',actions,()=>{exportText.value=makeCurl(read());exported.open=true;status('cURL is ready to copy in Export cURL.');},true);
     button('Reset to sample',actions,()=>{draft={...initial({}),environment:environment.value};render();status('Restored your sample values. The selected environment is unchanged.');},true);
     if(lastResponse){el('h3',`Last response · ${lastResponse.environment.toUpperCase()} · proposal ${lastResponse.proposalId}`,body);const previous=el('pre',lastResponse.text,body);previous.className='payment-response';previous.setAttribute('aria-label','Last payment response');}
@@ -201,5 +204,5 @@
       finally{sending=false;back.disabled=false;}
     });
   }
-  globalThis.FepPaymentTools=Object.freeze({open,core:Object.freeze({endpoint,environmentFor,importCurl,makeCurl,parseJson,validate})});
+  globalThis.FepPaymentTools=Object.freeze({open,core:Object.freeze({sample:()=>initial({}).payload,endpoint,environmentFor,importCurl,makeCurl,parseJson,validate})});
 })();

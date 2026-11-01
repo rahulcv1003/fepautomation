@@ -18,19 +18,25 @@ const vm=require('node:vm');
     const page=await context.newPage();page.setDefaultTimeout(8000);
     await page.route('https://uat-fep.freyrenergy.com/**',route=>route.fulfill({contentType:'text/html',body:'<h1>FEP test form</h1><label>Contact<input name="contact"></label><div><span>Project ID</span><span>1234567890</span></div><div id="paymentMethod"><div class="ant-card-body"><span>Advance amount: Rs. 15000</span></div></div>'}));
     await page.addInitScript(()=>{
-      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.4'));
-      window.chrome={runtime:{getManifest:()=>({version:'1.0.4'})},storage:{local:{
+      localStorage.setItem('fep-master-last-seen-version',JSON.stringify('1.0.5'));
+      window.paymentCalls=[];
+      window.chrome={runtime:{getManifest:()=>({version:'1.0.5'}),sendMessage:async request=>{paymentCalls.push(request);return {ok:true,status:200,data:{success:true}};}},storage:{local:{
         get:async(keys,callback)=>{const result={};for(const key of Array.isArray(keys)?keys:[keys])result[key]=JSON.parse(localStorage.getItem(key)||'null');callback?.(result);return result;},
         set:async(data)=>{for(const [key,value] of Object.entries(data))localStorage.setItem(key,JSON.stringify(value));}
       }}};
     });
-    const inject=async()=>{await page.addStyleTag({path:path.join(root,'ui.css')});await page.addScriptTag({path:path.join(root,'custom-tools.js')});await page.addScriptTag({path:path.join(root,'payment-tools.js')});await page.addScriptTag({path:path.join(root,'content.js')});};
+    const inject=async()=>{await page.addStyleTag({path:path.join(root,'ui.css')});for(const name of ['custom-tools.js','payment-tools.js','request-defaults.js','request-tools.js','content.js'])await page.addScriptTag({path:path.join(root,name)});};
     await page.goto('https://uat-fep.freyrenergy.com/create-proposal/123');await inject();
     await page.locator('#fep-launcher').waitFor();
     await page.locator('#fep-launcher').focus();
     await page.keyboard.press('Enter');
     assert.equal(await page.locator('#fep-launcher').getAttribute('aria-expanded'),'true');
     const compact=await page.locator('#fep-popup').boundingBox();
+    const ad=page.getByRole('link',{name:'Check out Crumble',exact:true});
+    assert((await ad.getAttribute('href')).includes('lecjahllepkiamfeaiaibikpobbdddnk'));
+    const settingsBounds=await page.getByRole('button',{name:'Settings',exact:true}).boundingBox();
+    const adBounds=await ad.boundingBox();
+    assert(adBounds.y>=settingsBounds.y+settingsBounds.height,'Crumble link sits below Settings');
     assert(compact.width<=265 && compact.height<=355,'Default panel should be compact');
     assert.equal(await page.locator('#fep-launcher').innerText(),'','Launcher should use an icon without a wordmark');
     await page.locator('#fep-popup').screenshot({path:path.join(root,'test-results/launcher-panel.png')});
@@ -45,6 +51,7 @@ const vm=require('node:vm');
     const dragged=await page.locator('#fep-popup').boundingBox();
     assert(dragged.width>larger.width && dragged.height>larger.height,'Panel resizes by dragging its corner');
     await page.getByRole('button',{name:'Settings',exact:true}).click();
+    await page.getByRole('button',{name:'Other cURLS',exact:true}).waitFor();
     await page.locator('#fep-popup').screenshot({path:path.join(root,'test-results/settings-panel.png')});
     assert.equal(await page.getByText('Mascot',{exact:true}).count(),0);
     await page.getByRole('button',{name:'← Back',exact:true}).click();
@@ -54,6 +61,7 @@ const vm=require('node:vm');
     const bounds=await page.locator('#fep-popup').boundingBox();
     assert(bounds.x>=0 && bounds.x+bounds.width<=375,'Tool panel stays inside narrow viewport');
     await page.setViewportSize({width:1280,height:900});
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.getByRole('button',{name:'Payments',exact:true}).click();
     await page.getByRole('heading',{name:'Payments',exact:true}).waitFor();
 
@@ -87,16 +95,21 @@ const vm=require('node:vm');
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await page.goto('https://uat-fep.freyrenergy.com/confirm-po/123');await inject();
     await page.getByRole('button',{name:'Pay Advance Payment',exact:true}).click();
-    await page.getByRole('heading',{name:'Payments',exact:true}).waitFor();
-    await page.getByRole('button',{name:'Close',exact:true}).click();
+    await page.getByText('✓ Advance payment submitted',{exact:true}).waitFor();
+    const payment=await page.evaluate(()=>paymentCalls[0]);
+    assert.equal(payment.type,'FEP_ADVANCE_PAYMENT');
+    assert.equal(JSON.parse(payment.body).proposal_id,'1234567890');
+    assert.equal(JSON.parse(payment.body).details.paid_amount,15000);
+    assert(JSON.parse(payment.body).Invoice_ID.endsWith('/1234567890'));
+    assert.equal(await page.getByRole('heading',{name:'Payments',exact:true}).count(),0,'One-click advance payment does not open editor');
     await page.locator('#fep-launcher').click();
     await page.getByRole('button',{name:'Settings',exact:true}).click();
-    await page.getByRole('button',{name:"What's New (v1.0.4)",exact:true}).click();
-    for(const title of ['A smaller, cleaner workspace','Your values, at the right moment','Payments without Postman']){
+    await page.getByRole('button',{name:"What's New (v1.0.5)",exact:true}).click();
+    for(const title of ['One-click advance payments','Other cURLS','Updated installation forms']){
       await page.locator('#fep-whats-new').getByText(title,{exact:true}).waitFor();
       await page.locator('#fep-whats-new').getByRole('button',{name:'Next',exact:true}).click();
     }
-    await page.locator('#fep-whats-new').getByText('Feedback and fixes',{exact:true}).waitFor();
+    await page.locator('#fep-whats-new').getByText('Workspace fixes',{exact:true}).waitFor();
     await page.locator('#fep-whats-new').getByRole('button',{name:'Got it!',exact:true}).click();
     assert.equal(await page.locator('#fep-whats-new').count(),0);
     console.log('PASS: full content-script launcher integration, storage API integration, custom fill after reload, bug-report entry.');

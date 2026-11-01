@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.5 — 1 November 2026
+
+- Generate PO pages now highlight Non Finance, while Fill Lead stays neutral.
+- Cleaner Other cURLS rows, responsive editors, and a Crumble link below Settings.
+
+- Added separate Save for future runs and Review & send now actions to every Other cURLS editor. One-time sending shows the environment, resolved payload, editable page values, and HTTP response without changing the saved configuration.
+
+- Updated Post Installation to the supplied payload, including media metadata and customer details; switched its GraphQL endpoint to each environment’s FEP API host while keeping project IDs and capacity dynamic.
+
+- Updated Pre Installation defaults to the supplied October payload, dates, customer details, acknowledgement timestamp, and seven media items; routed it to each environment’s FEP API host.
+- Other cURLS import now ignores browser-managed headers from copied browser cURLs.
+
+- Added Fill QC Form beside the installation buttons, with dynamic project IDs, environment routing, and saved QC payload edits under Other cURLS.
+
+- Restored direct Pay Advance Payment using the current project, advance amount, invoice ID, and environment.
+- Moved the manual payment editor into Settings, with an option to save edits for future one-click payments.
+- Added saved request templates for advance payments, surveys, and pre/post-installation actions. Supports value editing, cURL import, JSON replacement, placeholders, and reset.
+- Added an occasional Crumble suggestion with a 14-day cooldown and permanent opt-out.
+
 ## 1.0.4 — 27 October 2026
 
 This release consolidates the recent development builds into version **1.0.4** for Chrome distribution.

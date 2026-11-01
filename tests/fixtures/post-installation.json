@@ -1,0 +1,172 @@
+{
+  "query": "mutation ($input: savePostInstallationFormInput) {\n      savePostInstallationForm (input: $input) {\n    message\n  }\n    }",
+  "variables": {
+    "input": {
+      "project": "6a6ca5426cf062bf00c04668",
+      "isLastPage": true,
+      "projectDetails": {
+        "uniqueId": 10579570,
+        "projectName": "CustomerB Support Module_residential_independent",
+        "systemCapacity": 3.48,
+        "freyrSiteEngineer": "67ca958234a956e0d98304e3",
+        "freyrSiteEngineerName": "test site eng",
+        "vendorCompanyName": null,
+        "vendorMobileNumber": null,
+        "vendorEmailId": null,
+        "firstName": "test",
+        "lastName": "site eng"
+      },
+      "media": {
+        "videoOfAnchorFastnersDrillingAndChemicalFilling": [
+          {
+            "name": "Screen_Recording_2026-10-08_at_12.26.00_PM.mov",
+            "type": "video/quicktime",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/6c42fd71-5376-42e5-b200-d39ae92e8001_Screen-Recording-2026-10-08-at-12.26.00-PM1793364955856.mov"
+          }
+        ],
+        "structureInstallationPhoto": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.19.18 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/f1f86009-eec7-4781-8431-c73e74775e29_Screenshot-2026-10-22-at-2.19.18-PM1793365034529.png"
+          }
+        ],
+        "moduleInstalliationPhoto": [
+          {
+            "name": "Gemini_Generated_Image_9hva6m9hva6m9hva (1).png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/58476d05-afa7-4696-8fa0-6114b9d90b17_Gemini-Generated-Image-9hva6m9hva6m9hva-%281%291793365054824.png",
+            "extractedInfo": {
+              "fields": {
+                "latitude": "13.59350",
+                "longitude": "79.52220"
+              }
+            }
+          }
+        ],
+        "inverterAndDataLoggerSNoPhoto": [
+          {
+            "name": "Gemini_Generated_Image_9hva6m9hva6m9hva (1).png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/99b89925-626a-448e-85d0-25a0c50b58da_Gemini-Generated-Image-9hva6m9hva6m9hva-%281%291793365060429.png"
+          }
+        ],
+        "inverterTestReport": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.13 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/d2afb551-f186-49a0-9220-6ea108fbfd13_Screenshot-2026-10-22-at-2.17.13-PM1793365042254.png"
+          }
+        ],
+        "postInstallationEarthPitsPhotos": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.13 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/30aca7ea-a385-4ca6-84b5-2053568a3dd6_Screenshot-2026-10-22-at-2.17.13-PM1793364997164.png"
+          }
+        ],
+        "postInstallationInverterOrACDBOrDCDBPhoto": [
+          {
+            "name": "Gemini_Generated_Image_9hva6m9hva6m9hva (1).png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/8c5098d3-6c74-4523-909f-6baebdd7f712_Gemini-Generated-Image-9hva6m9hva6m9hva-%281%291793365060673.png",
+            "extractedInfo": {
+              "fields": {
+                "latitude": "13.59350",
+                "longitude": "79.52220"
+              }
+            }
+          }
+        ],
+        "earthPitInstallationVideo": [
+          {
+            "name": "Screen_Recording_2026-10-08_at_12.26.00_PM.mov",
+            "type": "video/quicktime",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/151017a8-3509-452f-a5dc-12d737f396ac_Screen-Recording-2026-10-08-at-12.26.00-PM1793364967016.mov"
+          }
+        ],
+        "civilFoundationOrWorkPhotos": [
+          {
+            "name": "Gemini_Generated_Image_9hva6m9hva6m9hva (1).png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/c740b64a-c858-4b48-ada2-ff4c2cac6958_Gemini-Generated-Image-9hva6m9hva6m9hva-%281%291793365066041.png"
+          }
+        ],
+        "installationCrewPhotoWithSystem": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.29 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/5791cf7e-5c45-4519-ac7a-3cbc7f547c5c_Screenshot-2026-10-22-at-2.17.29-PM1793365010649.png"
+          }
+        ],
+        "beneficiaryPhotoAlongWithCompleteInverterSetUp": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.13 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/e26574a9-e987-4597-83a8-8603768e21ed_Screenshot-2026-10-22-at-2.17.13-PM1793365015867.png"
+          }
+        ],
+        "beneficiaryPhotoAlongWithCompleteModuleSetUp": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.29 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/50cf7756-0928-4143-8b1b-62baad0451c1_Screenshot-2026-10-22-at-2.17.29-PM1793365006779.png"
+          }
+        ],
+        "postInstallationCeilingPhoto": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.13 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/b0a10022-6a9a-4ecc-8d90-f6667d307c61_Screenshot-2026-10-22-at-2.17.13-PM1793365019243.png"
+          }
+        ],
+        "structureAreaCleanupPhoto": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.13 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/372fb877-f7c9-4542-831f-3f8f0f248c91_Screenshot-2026-10-22-at-2.17.13-PM1793365022963.png"
+          }
+        ],
+        "roofCleanupPhoto": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.29 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/f83f90ae-5b52-4e77-8ee6-8efd2ac5ae11_Screenshot-2026-10-22-at-2.17.29-PM1793365025854.png"
+          }
+        ],
+        "materialStorageAreaCleanupPhoto": [
+          {
+            "name": "Screenshot 2026-10-22 at 2.17.13 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/98abfcbc-2494-4f87-b002-d75768521355_Screenshot-2026-10-22-at-2.17.13-PM1793365028934.png"
+          }
+        ],
+        "postInstallationFullSiteVideo": [
+          {
+            "name": "Screen_Recording_2026-10-08_at_12.26.00_PM.mov",
+            "type": "video/quicktime",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/6a436250-5a09-4e2d-9ee5-1906846ecec8_Screen-Recording-2026-10-08-at-12.26.00-PM1793364986883.mov"
+          }
+        ],
+        "acCableTerminationAtClientsPanelOrMeter": [
+          {
+            "name": "Screenshot 2026-10-29 at 4.37.58 PM.png",
+            "type": "image/png",
+            "content": "https://freyr-energy-media-uat.s3.ap-south-1.amazonaws.com/se-post-installation/71306a36-52e2-41f2-8d1b-f65b71e1df5c_Screenshot-2026-10-29-at-4.37.58-PM1793365001000.png"
+          }
+        ]
+      },
+      "customerDetails": {
+        "nameofClientOnSite": "CustomerB Support Module",
+        "phoneNumberOfClient": "2111122221",
+        "clientCooperationonSite": 5,
+        "dateOfFormSubmission": "2026-10-30",
+        "endDateOfInstallation": "2026-10-30",
+        "rmsUsername": "1",
+        "rmsPassword": "1",
+        "rmsSetupViaWifiOrMobileHotspot": "Wifi",
+        "overallInstallationExperience": 5
+      }
+    }
+  }
+}

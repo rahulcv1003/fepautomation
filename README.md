@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/assets/hero.svg" alt="FEP Master Autofill Suite — Autofill, custom fields, and payment testing" width="100%"></p>
 
 <p align="center">
-  <a href="https://github.com/rahulcv1003/fepautomation/releases/tag/v1.0.4">Version 1.0.4</a> ·
+  <a href="https://github.com/rahulcv1003/fepautomation/releases/tag/v1.0.5">Version 1.0.5</a> ·
   <a href="https://github.com/rahulcv1003/fepautomation/releases/latest">Download</a> ·
   <a href="CHANGELOG.md">What’s new</a> ·
   <a href="https://github.com/rahulcv1003/fepautomation/issues/new?template=bug_report.yml">Feedback</a>
@@ -11,7 +11,7 @@
 
 ## Download and install
 
-**[Download FEP Master Autofill Suite 1.0.4](https://github.com/rahulcv1003/fepautomation/releases/download/v1.0.4/fep-master-autofill-suite-1.0.4.zip)**
+**[Download FEP Master Autofill Suite 1.0.5](https://github.com/rahulcv1003/fepautomation/releases/download/v1.0.5/fep-master-autofill-suite-1.0.5.zip)**
 
 1. Download the named extension ZIP from [Releases](https://github.com/rahulcv1003/fepautomation/releases/latest).
 2. Extract it into a folder you intend to keep.
@@ -30,7 +30,9 @@ To update an unpacked installation, replace its extracted runtime files, click *
 | **Fill Lead** | Fill the open Add Lead form with generated defaults and matching saved rules. |
 | **Auto Fill Details** | Select the appropriate autofill routine for the current supported FEP page. |
 | **Finance / Non Finance** | Use the relevant PO flow on Generate PO pages. |
-| **Payments** | Import, edit, review, and submit payment requests to a selected FEP API environment. |
+| **Pay Advance Payment** | Submit the saved payment template using the current project ID and advance amount. |
+| **Settings → Payments** | Import, edit, review, and submit payment requests to a selected FEP API environment. |
+| **Settings → Other cURLS** | Save payload changes for advance payments, surveys, and pre/post-installation actions. |
 | **Settings → Custom Field Builder** | Pick fields and save values for a page pattern and environment. |
 | **Settings → Feedback & feature requests** | Prepare a GitHub bug report, feature suggestion, or general feedback. |
 | **Settings** | Set your autofill name, review activity statistics, and reopen What’s New. |
@@ -38,10 +40,10 @@ To update an unpacked installation, replace its extracted runtime files, click *
 The launcher is draggable. Resize its expanded panel from the upper-left corner, or focus the resize handle and use arrow keys. Double-click the handle to reset. Your preferred size is remembered.
 
 <table>
-  <tr><th>Compact tools</th><th>Payment review</th></tr>
+  <tr><th>Compact tools</th><th>Request review</th></tr>
   <tr>
-    <td align="center"><img src="docs/assets/tool-panel.png" alt="Compact FEP tools panel with Settings and Payments" width="264"></td>
-    <td align="center"><img src="docs/assets/payment-review.png" alt="Payment review showing the selected environment and JSON payload" width="520"></td>
+    <td align="center"><img src="docs/assets/tool-panel.png" alt="Compact FEP tools panel with Settings and Crumble" width="264"></td>
+    <td align="center"><img src="docs/assets/request-review.png" alt="One-time request review with environment, project values, and final JSON payload" width="520"></td>
   </tr>
 </table>
 
@@ -62,7 +64,9 @@ Supported: text, numbers, email, textarea, native date fields, native and Ant De
 
 ## Payments, without leaving FEP
 
-Open **Payments** from the launcher or **Pay Advance Payment** on the PO confirmation page.
+**Pay Advance Payment** on the PO confirmation page sends the request directly. It reads the current project ID and advance amount, updates the invoice ID, and uses the page’s payment endpoint. Missing project details stop the request.
+
+For manual changes, open **Settings → Payments**:
 
 - Start from the prefilled sample payload or import a Postman cURL, including JSON comments.
 - Edit nested values; numbers, booleans, and unset optional fields are handled automatically.
@@ -71,7 +75,23 @@ Open **Payments** from the launcher or **Pay Advance Payment** on the PO confirm
 - Inspect the HTTP status, elapsed time, and response body, or export the edited cURL.
 - Use **Reset to sample** to restore the sample values without changing the environment.
 
-The default payload includes sample identifiers, June 30 timestamps, amounts, links, and transaction details. Update these values for the intended request. Drafts, optional credentials, and the last response stay in the page’s memory until refresh. Requests are limited to the configured payment endpoints; automatic retries are not performed. If the connection fails, check the project’s payment record before resending because the result may be unknown.
+The editor starts with sample data. Drafts and responses stay in page memory until refresh. **Save for Pay Advance Payment** saves the edited payload and headers for future one-click payments; project IDs still follow the current page. Automatic retries are not performed. If the connection fails, check the payment record before resending.
+
+## Saved request templates
+
+Open **Settings → Other cURLS** to edit or send Advance Payment, Site Survey, Pre-installation, Post-installation, or QC Form. Change individual values, import a Postman cURL, or replace the JSON to add or remove fields.
+
+- **Save for future runs** stores your configuration without sending a request.
+- **Review & send now** prepares a one-time request without saving your edits. Check the environment, endpoint, page values, headers, and final JSON, then choose **Send request**. Missing project values can be entered for this run. The response shows HTTP status, elapsed time, and the response body. No automatic retries are made.
+- **Back to editor** keeps unsaved edits. **Reset to default** removes the saved override.
+
+On the project tracker’s Installation stage, **Fill QC Form** appears beside the pre/post-installation buttons. It submits `saveQaForm` to the current environment’s FEP API, using the project’s internal ID from the URL and numeric ID from the page. QC uses `projectDetails.projectId` for the numeric ID; it does not need system size. Other QC values, including checklist answers, customer details, media links, and the supplied timestamp, start from the provided sample and can be changed in Other cURLS.
+
+Project IDs always come from the page. Keep placeholders such as `{{amount}}`, `{{systemSize}}`, and `{{projectSize}}` for current page values, or replace them with fixed values. Endpoints follow the current FEP environment, including after importing a cURL. Templates and their headers are stored locally in Chrome.
+
+Pre Installation, Post Installation, and QC use `https://<environment>-fep-api.freyrenergy.com:444/api/v1/graphql` (production: `https://fep-api.freyrenergy.com:444/api/v1/graphql`). Pre Installation defaults use the supplied October 30 payload; IDs and system capacity come from the page. Media links remain the supplied UAT files, since changing a storage hostname does not copy files into another environment. Previously saved custom templates still take priority; use **Reset to default** to load the updated built-in values. Browser-managed headers in copied cURLs are ignored during import.
+
+The extension also shows an occasional link to **Crumble**, Rahul’s cookie-cleaning extension: after three launcher opens and at most once every 14 days. Choose **Not now** or **Don’t show again**. You can change that preference in Other cURLS. No tracking requests are made.
 
 ## Environments and workflow support
 
@@ -126,6 +146,7 @@ Tests use isolated browser contexts, fixture pages, and simulated payment respon
 | `manifest.json`, `content.js`, `ui.css` | Chrome configuration, FEP workflows, and scoped interface styles. |
 | `custom-tools.js` | Field picker, saved-rule engine, and feedback dialogs. |
 | `payment-tools.js`, `background.js` | Payment editor, cURL parsing, and validated request relay. |
+| `request-tools.js`, `request-defaults.js` | Saved request templates, dynamic page values, and the Crumble suggestion. |
 | `interceptor.js`, `otp-listener.js` | Login-response and OTP assistance. |
 | `icons/` | Vector mark and packaged PNG icons. |
 | `tests/` | Browser and worker regression tests. |

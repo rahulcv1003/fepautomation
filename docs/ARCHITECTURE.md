@@ -4,6 +4,18 @@ This document explains **what this Chrome extension does today and how it works*
 
 It reflects the code as of this writing. If behavior changes, update this file alongside the code.
 
+## Request templates (October 2026)
+
+Workspace sending: `FepRequestTools.configure` receives page-context and endpoint callbacks from `content.js`. Each Other cURLS editor offers a save-only action and a separate one-time review/send action. Review resolves typed placeholders using current page values or explicit run-only entries; its exact JSON is submitted without persisting those edits. Advance Payment uses the existing background relay, and the four GraphQL actions use the same page fetch path as their inline buttons. The in-flight guard and disabled sent button prevent repeated sends; HTTP, GraphQL, and network outcomes are shown without automatic retries. `tests/request-workspace.cjs` covers all five actions, save/send separation, preview accuracy, temporary values, validation, and failures.
+
+QC support (November 2026): `fillQcForm` uses the supplied `saveQaForm` payload from `request-defaults.js`. `variables.input.project` binds to the URL’s internal ID; `variables.input.projectDetails.projectId` binds to the page’s numeric ID using `{{uniqueId}}` and remains a number. No installation `uniqueId` field or system-size requirement is added to QC. QC uses the current environment’s `paymentBase` (the newer FEP API host) with `/api/v1/graphql`, matching the supplied UAT cURL. It appears beside the installation buttons on the same tracker Installation stage, prevents concurrent sends, and handles GraphQL, HTTP, and network errors without automatic retries. `tests/qc-form.cjs` tests the injected action across all four environments with simulated responses.
+
+`request-defaults.js` holds the survey and pre/post-installation defaults formerly inline in `content.js`. `request-tools.js` provides Settings → Other cURLS, local persistence under `fep-request-templates-v1`, value editing, cURL import, JSON replacement, and reset. Payment defaults come from `FepPaymentTools.core.sample()` with dynamic tokens for project, amount, invoice year, and date. All four action handlers resolve the saved template immediately before sending. Project IDs are rebound to the current page, exact token values preserve number types, and imported endpoints never replace the environment mapping. Templates replace the entire payload rather than merging it, so removed fields stay removed.
+
+The PO page’s Pay Advance Payment button sends directly through the background relay and guards concurrent clicks. The manual payment editor is under Settings; its “Save for Pay Advance Payment” button persists a reusable template. Templates may include saved headers; they are local browser data, as described in PRIVACY.md.
+
+`request-tools.js` also shows the local Crumble suggestion after three launcher opens, with a 14-day cooldown and stored opt-out (`fep-crumble-promo-v1`). It opens a static Chrome Web Store link only after a click and makes no tracking requests.
+
 ---
 
 ## 1. What this is

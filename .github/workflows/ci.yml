@@ -24,4 +24,27 @@ jobs:
         with:
           name: extension-package
           path: release/
-
+  release:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-package
+          path: release/
+      - name: Publish versioned download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; leaving its assets unchanged."
+            exit 0
+          fi
+          node scripts/release-notes.cjs > release-notes.md
+          gh release create "$tag" "release/fep-master-autofill-suite-$version.zip" release/SHA256SUMS.txt --target "$GITHUB_SHA" --title "FEP Master Autofill Suite $version" --notes-file release-notes.md --latest
